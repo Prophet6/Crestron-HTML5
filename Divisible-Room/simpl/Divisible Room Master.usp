@@ -1,0 +1,29 @@
+#HELP_BEGIN
+Divisible Room Master
+Identity module for the master HTML5 panel. Master_Mode_FB is always high
+so the CH5 UI shows rooms A, B, and C at all times.
+
+Wire Master_Mode_FB to the master XPanel digital 13.
+Wire Room_Assign to analog 10 (value 0 = master).
+
+Shared AV/wall logic stays on Divisible Room Logic v1.0 (one instance,
+fan to every XPanel).
+#HELP_END
+
+#SYMBOL_NAME "Divisible Room Master"
+#CATEGORY "1"
+#DEFAULT_VOLATILE
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, Master_Mode;
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, Master_Mode_FB;
+ANALOG_OUTPUT	_SKIP_, Room_Assign;
+
+CHANGE Master_Mode {
+	Master_Mode_FB = 1;
+}
+
+FUNCTION Main () {
+	Master_Mode_FB = 1;
+	Room_Assign = 0;
+	WaitForInitializationComplete ();
+}

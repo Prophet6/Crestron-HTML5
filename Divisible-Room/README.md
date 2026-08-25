@@ -18,16 +18,16 @@ Each room may combine only with a **neighbor**. A never joins C unless B is in t
 | both open | A+B+C |
 | A+C only | **illegal — no control for this** |
 
-Same stack as Hello-World: vanilla TypeScript, Vite, CrComLib. One `.ch5z`, four views:
+Same stack as Hello-World: vanilla TypeScript, Vite, CrComLib. One `.ch5z` on every panel. Room identity comes from **IP-ID**; **Master Mode** comes from that panel’s identity S+ module (digital 13).
 
-| View | URL | Default IP-ID |
-|------|-----|----------------|
-| Master (sees every room always) | `?panel=master` (default) | E2 |
-| Room A | `?panel=A` | E3 |
-| Room B | `?panel=B` | E4 |
-| Room C | `?panel=C` | E5 |
+| Panel | IP-ID | Identity S+ | What it shows |
+|-------|-------|-------------|---------------|
+| Room A | E1 | Divisible Room A | Zone containing A |
+| Room B | E2 | Divisible Room B | Zone containing B |
+| Room C | E3 | Divisible Room C | Zone containing C |
+| Master | any (tie Master_Mode high, or use Master S+) | Divisible Room Master | A, B, and C always |
 
-A room panel only shows rooms currently combined with it. Neighbor Combine/Divide stays available so that panel can still open its air wall.
+Shared walls/AV: one **Divisible Room Logic v1.0**. Vite preview without a processor: `?ipId=E1` (Room A) or `?master=1` (master layout).
 
 ## Run
 
@@ -37,7 +37,7 @@ npm install
 npm run dev
 ```
 
-Vite is on **http://localhost:5174**. Try `/` (master) and `/?panel=B`.
+Vite is on **http://localhost:5174**. Try `/?ipId=E1` (Room A) and `/?master=1` (master).
 
 ```bash
 npm run build:ch5z
@@ -45,8 +45,8 @@ npm run deploy:xpanel
 ```
 
 ```
-https://192.168.86.200/divisible-room/index.html?panel=master&ipID=E2&authToken=<token>
-https://192.168.86.200/divisible-room/index.html?panel=A&ipID=E3&authToken=<token>
+https://192.168.86.200/divisible-room/index.html?ipID=E1&authToken=<token>
+https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
 ```
 
 Join map and SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Seed program + SIMPL+ module: [`simpl/`](simpl/).

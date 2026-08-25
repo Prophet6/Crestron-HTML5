@@ -5,11 +5,18 @@ A cannot combine with C unless B is in the same space.
 
 Legal layouts: A|B|C, A+B|C, A|B+C, A+B+C.
 
-Wire 1:1 to an HTML5 XPanel / TST-1080 using the join map in docs/simpl.md.
-Volume analog from the panel is echoed as FB (not a timed ramp). Combined
-rooms follow the leftmost master.
+Shared core — one instance, fan AV/wall FB to every XPanel.
+Each panel also gets its own identity module (Master / A / B / C).
+
+Wall_AB_Sense / Wall_BC_Sense stay high while the sensor sees a wall
+(wall present = rooms divided). Combine_*/Divide_* override. Last
+sensor change or last override press wins.
+
+Selecting a source powers that room on. Powering off clears the source.
 
 -- VERSION HISTORY --
+v1.2  2026-08-25
+- Sense inputs + last-wins override; source powers on; power off clears source
 v1.1  2026-08-25
 - Volume up/down appended at end of digital inputs (does not shift existing pins)
 v1.0  2026-08-25
@@ -21,7 +28,7 @@ v1.0  2026-08-25
 #CATEGORY "1" /* Building Management */
 #DEFAULT_VOLATILE
 
-DIGITAL_INPUT	Combine_AB, Divide_AB, Combine_BC, Divide_BC, Combine_All, Divide_All,
+DIGITAL_INPUT	Wall_AB_Sense, Wall_BC_Sense, Combine_AB, Divide_AB, Combine_BC, Divide_BC,
 				_SKIP_,
 				A_Power, A_Mute, A_Laptop, A_AppleTV, A_HDMI,
 				_SKIP_,
@@ -29,7 +36,9 @@ DIGITAL_INPUT	Combine_AB, Divide_AB, Combine_BC, Divide_BC, Combine_All, Divide_
 				_SKIP_,
 				C_Power, C_Mute, C_Laptop, C_AppleTV, C_HDMI,
 				_SKIP_,
-				A_Vol_Up, A_Vol_Down, B_Vol_Up, B_Vol_Down, C_Vol_Up, C_Vol_Down;
+				A_Vol_Up, A_Vol_Down, B_Vol_Up, B_Vol_Down, C_Vol_Up, C_Vol_Down,
+				_SKIP_,
+				Combine_All, Divide_All;
 
 ANALOG_INPUT	_SKIP_,
 				A_Volume, B_Volume, C_Volume,
@@ -231,23 +240,66 @@ PUSH Divide_All {
 	ApplyZones ();
 }
 
-PUSH A_Power { If (A_Pwr = 1) A_Pwr = 0; Else A_Pwr = 1; ApplyZones (); }
-PUSH B_Power { If (B_Pwr = 1) B_Pwr = 0; Else B_Pwr = 1; ApplyZones (); }
-PUSH C_Power { If (C_Pwr = 1) C_Pwr = 0; Else C_Pwr = 1; ApplyZones (); }
+PUSH A_Power {
+	If (A_Pwr = 1) {
+		A_Pwr = 0;
+		A_Src = 0;
+	}
+	Else {
+		A_Pwr = 1;
+	}
+	ApplyZones ();
+}
+PUSH B_Power {
+	If (B_Pwr = 1) {
+		B_Pwr = 0;
+		B_Src = 0;
+	}
+	Else {
+		B_Pwr = 1;
+	}
+	ApplyZones ();
+}
+PUSH C_Power {
+	If (C_Pwr = 1) {
+		C_Pwr = 0;
+		C_Src = 0;
+	}
+	Else {
+		C_Pwr = 1;
+	}
+	ApplyZones ();
+}
 
 PUSH A_Mute { If (A_Mut = 1) A_Mut = 0; Else A_Mut = 1; ApplyZones (); }
 PUSH B_Mute { If (B_Mut = 1) B_Mut = 0; Else B_Mut = 1; ApplyZones (); }
 PUSH C_Mute { If (C_Mut = 1) C_Mut = 0; Else C_Mut = 1; ApplyZones (); }
 
-PUSH A_Laptop { A_Src = 1; ApplyZones (); }
-PUSH A_AppleTV { A_Src = 2; ApplyZones (); }
-PUSH A_HDMI { A_Src = 3; ApplyZones (); }
-PUSH B_Laptop { B_Src = 1; ApplyZones (); }
-PUSH B_AppleTV { B_Src = 2; ApplyZones (); }
-PUSH B_HDMI { B_Src = 3; ApplyZones (); }
-PUSH C_Laptop { C_Src = 1; ApplyZones (); }
-PUSH C_AppleTV { C_Src = 2; ApplyZones (); }
-PUSH C_HDMI { C_Src = 3; ApplyZones (); }
+PUSH A_Laptop { A_Src = 1; A_Pwr = 1; ApplyZones (); }
+PUSH A_AppleTV { A_Src = 2; A_Pwr = 1; ApplyZones (); }
+PUSH A_HDMI { A_Src = 3; A_Pwr = 1; ApplyZones (); }
+PUSH B_Laptop { B_Src = 1; B_Pwr = 1; ApplyZones (); }
+PUSH B_AppleTV { B_Src = 2; B_Pwr = 1; ApplyZones (); }
+PUSH B_HDMI { B_Src = 3; B_Pwr = 1; ApplyZones (); }
+PUSH C_Laptop { C_Src = 1; C_Pwr = 1; ApplyZones (); }
+PUSH C_AppleTV { C_Src = 2; C_Pwr = 1; ApplyZones (); }
+PUSH C_HDMI { C_Src = 3; C_Pwr = 1; ApplyZones (); }
+
+CHANGE Wall_AB_Sense {
+	If (Wall_AB_Sense = 1)
+		Wall_AB = 0;
+	Else
+		Wall_AB = 1;
+	ApplyZones ();
+}
+
+CHANGE Wall_BC_Sense {
+	If (Wall_BC_Sense = 1)
+		Wall_BC = 0;
+	Else
+		Wall_BC = 1;
+	ApplyZones ();
+}
 
 CHANGE A_Volume { A_Volume_FB = A_Volume; ApplyZones (); }
 CHANGE B_Volume { B_Volume_FB = B_Volume; ApplyZones (); }

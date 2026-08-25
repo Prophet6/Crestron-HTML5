@@ -5,15 +5,22 @@ import type { AnalogJoin, DigitalJoin, SerialJoin } from './types';
  * There is no A–C wall. Combining A+C without B is not a legal state.
  */
 export const Joins = {
-  combineAB: { type: 'b', name: '1' } satisfies DigitalJoin,
-  divideAB: { type: 'b', name: '2' } satisfies DigitalJoin,
-  combineBC: { type: 'b', name: '3' } satisfies DigitalJoin,
-  divideBC: { type: 'b', name: '4' } satisfies DigitalJoin,
-  combineAll: { type: 'b', name: '5' } satisfies DigitalJoin,
-  divideAll: { type: 'b', name: '6' } satisfies DigitalJoin,
+  /** Held high while the sensor sees a wall (rooms divided). */
+  wallABSense: { type: 'b', name: '1' } satisfies DigitalJoin,
+  wallBCSense: { type: 'b', name: '2' } satisfies DigitalJoin,
+  combineAB: { type: 'b', name: '3' } satisfies DigitalJoin,
+  divideAB: { type: 'b', name: '4' } satisfies DigitalJoin,
+  combineBC: { type: 'b', name: '5' } satisfies DigitalJoin,
+  divideBC: { type: 'b', name: '6' } satisfies DigitalJoin,
+  combineAll: { type: 'b', name: '7' } satisfies DigitalJoin,
+  divideAll: { type: 'b', name: '8' } satisfies DigitalJoin,
   /** true = air wall open / rooms combined */
   wallAB: { type: 'b', name: '11' } satisfies DigitalJoin,
   wallBC: { type: 'b', name: '12' } satisfies DigitalJoin,
+  /** Held FB from that panel's identity S+ (Master / A / B / C). */
+  masterMode: { type: 'b', name: '13' } satisfies DigitalJoin,
+  /** 0 = master, 1 = A, 2 = B, 3 = C */
+  roomAssign: { type: 'n', name: '10' } satisfies AnalogJoin,
 
   nameA: { type: 's', name: '1' } satisfies SerialJoin,
   nameB: { type: 's', name: '2' } satisfies SerialJoin,

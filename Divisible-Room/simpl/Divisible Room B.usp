@@ -1,0 +1,25 @@
+#HELP_BEGIN
+Divisible Room B
+Identity module for the Room B panel (IP-ID E2). Master_Mode_FB follows
+the Master_Mode input (leave unwired = satellite). Room_Assign = 2.
+
+Wire Master_Mode_FB to XPanel E2 digital 13, Room_Assign to analog 10.
+#HELP_END
+
+#SYMBOL_NAME "Divisible Room B"
+#CATEGORY "1"
+#DEFAULT_VOLATILE
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, Master_Mode;
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, Master_Mode_FB;
+ANALOG_OUTPUT	_SKIP_, Room_Assign;
+
+CHANGE Master_Mode {
+	Master_Mode_FB = Master_Mode;
+}
+
+FUNCTION Main () {
+	Master_Mode_FB = Master_Mode;
+	Room_Assign = 2;
+	WaitForInitializationComplete ();
+}

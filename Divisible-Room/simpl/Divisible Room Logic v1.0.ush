@@ -13,13 +13,18 @@
   ObjTp=Hd
   Cmn1=Divisible Room Logic v1.0\\Three rooms in a line: A — B — C.
   Cmn2=||1Neighbor walls only.\\A cannot combine with C unless B is in the||1
-  Cmn3=same space.\\\\Legal layouts: A|B|C, A+B|C, A|B+C, A+B+C.\\\\Wire||1
-  Cmn4=1:1 to an HTML5 XPanel / TST-1080 using the join map in docs/simpl.
-  Cmn5=md.\\Volume analog from the panel is echoed as FB (not a timed ramp).
-  Cmn6=||1Combined\\rooms follow the leftmost master.\\\\-- VERSION HISTORY||1
-  Cmn7=--\\v1.1  2026-08-25\\- Volume up/down appended at end of digital||1
-  Cmn8=inputs (does not shift existing pins)\\v1.0  2026-08-25\\- Walls,||1
-  Cmn9=per-room source/volume/mute/power, zone follow\\
+  Cmn3=same space.\\\\Legal layouts: A|B|C, A+B|C, A|B+C, A+B+C.\\\\Shared||1
+  Cmn4=core — one instance, fan AV/wall FB to every XPanel.\\Each panel||1
+  Cmn5=also gets its own identity module (Master / A / B / C).\\\\Wall_AB_Sense||1
+  Cmn6=/ Wall_BC_Sense stay high while the sensor sees a wall\\(wall present||1
+  Cmn7== rooms divided). Combine_*/Divide_* override. Last\\sensor change||1
+  Cmn8=or last override press wins.\\\\Selecting a source powers that room||1
+  Cmn9=on. Powering off clears the source.\\\\-- VERSION HISTORY --\\v1.
+  Cmn10=2  2026-08-25\\- Sense inputs + last-wins override; source powers||1
+  Cmn11=on; power off clears source\\v1.1  2026-08-25\\- Volume up/down||1
+  Cmn12=appended at end of digital inputs (does not shift existing pins)\\
+  Cmn13=v1.0  2026-08-25\\- Walls, per-room source/volume/mute/power, zone||1
+  Cmn14=follow\\
 [END]
 [BEGIN]
   ObjTp=Symbol
@@ -30,17 +35,17 @@
   SmplCName=Divisible Room Logic v1.0.usp
   Code=1
   SysRev5=3.090
-  InputCue1=Combine_AB
+  InputCue1=Wall_AB_Sense
   InputSigType1=Digital
-  InputCue2=Divide_AB
+  InputCue2=Wall_BC_Sense
   InputSigType2=Digital
-  InputCue3=Combine_BC
+  InputCue3=Combine_AB
   InputSigType3=Digital
-  InputCue4=Divide_BC
+  InputCue4=Divide_AB
   InputSigType4=Digital
-  InputCue5=Combine_All
+  InputCue5=Combine_BC
   InputSigType5=Digital
-  InputCue6=Divide_All
+  InputCue6=Divide_BC
   InputSigType6=Digital
   InputCue7=[~UNUSED~]
   InputSigType7=Digital
@@ -92,6 +97,12 @@
   InputSigType30=Digital
   InputCue31=C_Vol_Down
   InputSigType31=Digital
+  InputCue32=[~UNUSED~]
+  InputSigType32=Digital
+  InputCue33=Combine_All
+  InputSigType33=Digital
+  InputCue34=Divide_All
+  InputSigType34=Digital
   OutputCue1=Wall_AB_Open
   OutputSigType1=Digital
   OutputCue2=Wall_BC_Open
@@ -177,8 +188,8 @@
   OutputList2Cue11=Room_C_Name$
   OutputList2SigType11=Serial
   ParamCue1=[Reference Name]
-  MinVariableInputs=31
-  MaxVariableInputs=31
+  MinVariableInputs=34
+  MaxVariableInputs=34
   MinVariableInputsList2=7
   MaxVariableInputsList2=7
   MinVariableOutputs=24

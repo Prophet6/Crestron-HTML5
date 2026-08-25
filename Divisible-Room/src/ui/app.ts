@@ -10,7 +10,14 @@ import {
 } from '../crestron/bridge';
 import { Joins, RoomJoins, Source, type SourceId } from '../crestron/joins';
 import type { ConnectionState, CrestronRuntime } from '../crestron/init';
-import { ipId, panelId, processorHost } from '../config';
+import {
+  ipId,
+  panelFromState,
+  queryMaster,
+  roomFromAssign,
+  roomFromIpId,
+  processorHost,
+} from '../config';
 import {
   masterRoom,
   summarize,
@@ -43,21 +50,21 @@ const SOURCE_COPY: Record<SourceId, { kicker: string; title: string; body: strin
   [Source.Laptop]: {
     kicker: 'Laptop',
     title: 'Table HDMI',
-    body: 'Connect the laptop to the HDMI cable at the table. Device identity and BYOD status will show here.',
-    controls: '<button type="button" class="btn" disabled>Auto-switch (soon)</button>',
+    body: 'Connect the laptop to the HDMI cable at the table.',
+    controls: '',
   },
   [Source.AppleTv]: {
     kicker: 'Apple TV',
     title: 'Apple TV',
-    body: 'Now playing and transport controls will live on this page.',
+    body: 'Transport and now-playing controls for this source.',
     controls:
       '<button type="button" class="btn" disabled>Menu</button><button type="button" class="btn" disabled>Play / Pause</button><button type="button" class="btn" disabled>Home</button>',
   },
   [Source.Hdmi]: {
     kicker: 'HDMI',
     title: 'Wall plate',
-    body: 'Room HDMI input is routed to the display. Sink / HDCP details will show here.',
-    controls: '<button type="button" class="btn" disabled>Re-sync (soon)</button>',
+    body: 'Room HDMI input is routed to the display.',
+    controls: '',
   },
 };
 
@@ -69,9 +76,10 @@ export function mountApp(runtime: CrestronRuntime): void {
     C: { source: Source.Off, volume: 0, mute: false, power: false, name: 'C' },
   };
   let pendingPower: RoomId | undefined;
+  let masterMode = queryMaster;
+  let homeRoom: RoomId = roomFromIpId(ipId) ?? 'A';
 
   startClock(must('#clock-time'), must('#clock-date'));
-  must('#panel-role').textContent = panelId === 'master' ? 'Master panel' : `Room ${panelId} panel`;
   must('#cip-detail').textContent = `${processorHost} · IP-ID ${ipId.replace(/^0x/i, '')}`;
   runtime.setConnectionHandler((state, detail) => {
     setConnection(must('#cip-dot'), must('#cip-label'), must('#cip-detail'), state, detail);
@@ -83,6 +91,20 @@ export function mountApp(runtime: CrestronRuntime): void {
   });
   subscribeDigital(Joins.wallBC, (value) => {
     partitions.wallBCOpen = value;
+    render();
+  });
+  subscribeDigital(Joins.masterMode, (value) => {
+    masterMode = value;
+    render();
+  });
+  subscribeAnalog(Joins.roomAssign, (value) => {
+    const assigned = roomFromAssign(value);
+    if (assigned) {
+      homeRoom = assigned;
+    }
+    if (value === 0) {
+      masterMode = true;
+    }
     render();
   });
   subscribeSerial(Joins.nameA, (value) => {
@@ -144,6 +166,7 @@ export function mountApp(runtime: CrestronRuntime): void {
       const source = normalizeSource(Number(el.dataset.source));
       applyToZone(room, (target, id, master) => {
         target.source = source;
+        target.power = true;
         if (id === master) {
           publishAnalog(RoomJoins[master].source, source);
           const press = sourceJoin(master, source);
@@ -257,6 +280,9 @@ export function mountApp(runtime: CrestronRuntime): void {
   function setZonePower(room: RoomId, on: boolean): void {
     applyToZone(room, (target, id, master) => {
       target.power = on;
+      if (!on) {
+        target.source = Source.Off;
+      }
       if (id === master) {
         pulse(RoomJoins[master].power);
       }
@@ -294,12 +320,14 @@ export function mountApp(runtime: CrestronRuntime): void {
   }
 
   function render(): void {
+    const panel = panelFromState(masterMode, homeRoom);
+    must('#panel-role').textContent = panel === 'master' ? 'Master panel' : `Room ${homeRoom} panel`;
     must('#config-label').textContent = summarize(partitions);
-    const shownRooms = new Set(visibleRooms(partitions, panelId));
-    const shownWalls = new Set(visibleWalls(partitions, panelId));
-    must('#master-actions').classList.toggle('is-hidden', panelId !== 'master');
+    const shownRooms = new Set(visibleRooms(partitions, panel));
+    const shownWalls = new Set(visibleWalls(partitions, panel));
+    must('#master-actions').classList.toggle('is-hidden', panel !== 'master');
     must('#dock-rule').textContent =
-      panelId === 'master'
+      panel === 'master'
         ? 'A cannot combine with C unless B is in the same space.'
         : 'You only see rooms currently combined with this space.';
 
