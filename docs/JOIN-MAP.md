@@ -51,12 +51,10 @@ Do **not** wire these to the XPanel unless you are simulating a sensor from soft
 
 | Join | Dir | CH5 | Core S+ | Notes |
 |------|-----|-----|---------|--------|
-| 1 | | | *(unused on panel)* | Sensor is `Wall_AB_Sense`, not a panel join |
-| 2 | | | *(unused on panel)* | Sensor is `Wall_BC_Sense` |
+| 1 | Core → panel | `wallAB` | `Wall_AB_Open` | Held. `1` = combined / air wall open |
+| 2 | Core → panel | `wallBC` | `Wall_BC_Open` | Held. `1` = combined / air wall open |
 | 7 | Panel → core | `combineAll` | `Combine_All` | Pulse. Opens both walls (override) |
 | 8 | Panel → core | `divideAll` | `Divide_All` | Pulse. Closes both walls (override) |
-| 11 | Core → panel | `wallAB` | `Wall_AB_Open` | Held. `1` = combined / air wall open |
-| 12 | Core → panel | `wallBC` | `Wall_BC_Open` | Held. `1` = combined / air wall open |
 | 13 | Identity → panel | `masterMode` | `Master_Mode_FB` | See identity table |
 | 21 | Both | `RoomJoins.A.power` | `A_Power` / `A_Power_FB` | Pulse in, held FB. Off clears source |
 | 22 | Both | `RoomJoins.A.mute` | `A_Mute` / `A_Mute_FB` | Pulse in, held FB |
@@ -108,13 +106,13 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 
 | Join | Use |
 |------|-----|
-| 1–2 | *Open — do not use for panel. Sensors on core only.* |
-| 3–6 | *Open on current Logic module* |
+| 1 | Wall_AB_Open FB |
+| 2 | Wall_BC_Open FB |
+| 3–6 | *Open on current Logic module* (UI per-wall combine/divide if you add those pins) |
 | 7 | Combine_All press |
 | 8 | Divide_All press |
 | 9–10 | Open |
-| 11 | Wall_AB_Open FB |
-| 12 | Wall_BC_Open FB |
+| 11–12 | Open |
 | 13 | Master_Mode_FB |
 | 14–20 | Open |
 | 21–27 | Room A (power, mute, vol ±, laptop, ATV, HDMI) |

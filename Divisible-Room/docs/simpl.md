@@ -29,16 +29,10 @@ Same `.ch5z` on every panel. The UI uses IP-ID (or analog 10) for home room, and
 
 | Join | Panel → core | Core → panel |
 |---|---|---|
-| Digital 1 | Wall_AB_Sense (held high = sensor sees wall) | |
-| Digital 2 | Wall_BC_Sense | |
-| Digital 3 | Combine_AB (override pulse) | |
-| Digital 4 | Divide_AB | |
-| Digital 5 | Combine_BC | |
-| Digital 6 | Divide_BC | |
+| Digital 1 | | Wall_AB_Open |
+| Digital 2 | | Wall_BC_Open |
 | Digital 7 | Combine_All | |
 | Digital 8 | Divide_All | |
-| Digital 11 | | Wall_AB_Open |
-| Digital 12 | | Wall_BC_Open |
 | Digital 13 | | Master_Mode_FB (from **identity** module, not core) |
 | Analog 10 | | Room_Assign (from identity module) |
 | Serial 1 / 2 / 3 | | Room_A_Name$ / B / C |
