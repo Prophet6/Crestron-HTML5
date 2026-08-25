@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Divisible-Room</title>
+    <script src="./cr-com-lib.js"></script>
+  </head>
+  <body>
+    <div id="app" class="shell">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Divisible room</p>
+          <h1 id="config-label">Three independent rooms</h1>
+        </div>
+        <div class="header__clock">
+          <p id="clock-time">--:--</p>
+          <p id="clock-date" class="eyebrow">—</p>
+        </div>
+        <div class="header__status">
+          <span id="cip-dot" class="status-dot" data-state="connecting" aria-hidden="true"></span>
+          <p id="cip-label">Connecting</p>
+          <p id="cip-detail" class="eyebrow">192.168.86.200 · IP-ID E2</p>
+        </div>
+      </header>
+
+      <section class="floor" aria-label="Rooms A B C">
+        <article class="room" data-room="A">
+          <header class="room__head">
+            <p class="eyebrow">Room</p>
+            <h2 class="room__name" data-room-name="A">A</h2>
+            <p class="room__zone" data-room-zone="A">Independent</p>
+          </header>
+          <div class="sources" data-room="A">
+            <button type="button" class="btn" data-source="1">Laptop</button>
+            <button type="button" class="btn" data-source="2">Apple TV</button>
+            <button type="button" class="btn" data-source="3">HDMI</button>
+          </div>
+          <label class="slider-block">
+            <span>Volume <strong data-vol-label="A">0%</strong></span>
+            <input data-vol="A" type="range" min="0" max="100" value="0" />
+          </label>
+          <div class="room__row">
+            <button type="button" class="btn" data-mute="A">Mute</button>
+            <button type="button" class="btn btn--ghost" data-power="A">Power</button>
+          </div>
+        </article>
+
+        <div class="wall" data-wall="AB">
+          <p class="wall__label">A | B</p>
+          <p class="wall__state" data-wall-state="AB">Closed</p>
+          <button type="button" class="btn wall__btn" data-wall-toggle="AB">Combine</button>
+        </div>
+
+        <article class="room" data-room="B">
+          <header class="room__head">
+            <p class="eyebrow">Room</p>
+            <h2 class="room__name" data-room-name="B">B</h2>
+            <p class="room__zone" data-room-zone="B">Independent</p>
+          </header>
+          <div class="sources" data-room="B">
+            <button type="button" class="btn" data-source="1">Laptop</button>
+            <button type="button" class="btn" data-source="2">Apple TV</button>
+            <button type="button" class="btn" data-source="3">HDMI</button>
+          </div>
+          <label class="slider-block">
+            <span>Volume <strong data-vol-label="B">0%</strong></span>
+            <input data-vol="B" type="range" min="0" max="100" value="0" />
+          </label>
+          <div class="room__row">
+            <button type="button" class="btn" data-mute="B">Mute</button>
+            <button type="button" class="btn btn--ghost" data-power="B">Power</button>
+          </div>
+        </article>
+
+        <div class="wall" data-wall="BC">
+          <p class="wall__label">B | C</p>
+          <p class="wall__state" data-wall-state="BC">Closed</p>
+          <button type="button" class="btn wall__btn" data-wall-toggle="BC">Combine</button>
+        </div>
+
+        <article class="room" data-room="C">
+          <header class="room__head">
+            <p class="eyebrow">Room</p>
+            <h2 class="room__name" data-room-name="C">C</h2>
+            <p class="room__zone" data-room-zone="C">Independent</p>
+          </header>
+          <div class="sources" data-room="C">
+            <button type="button" class="btn" data-source="1">Laptop</button>
+            <button type="button" class="btn" data-source="2">Apple TV</button>
+            <button type="button" class="btn" data-source="3">HDMI</button>
+          </div>
+          <label class="slider-block">
+            <span>Volume <strong data-vol-label="C">0%</strong></span>
+            <input data-vol="C" type="range" min="0" max="100" value="0" />
+          </label>
+          <div class="room__row">
+            <button type="button" class="btn" data-mute="C">Mute</button>
+            <button type="button" class="btn btn--ghost" data-power="C">Power</button>
+          </div>
+        </article>
+      </section>
+
+      <footer class="dock">
+        <p class="rule">A cannot combine with C unless B is in the same space.</p>
+        <div class="dock__actions">
+          <button type="button" class="btn" data-action="combine-all">Combine all three</button>
+          <button type="button" class="btn btn--ghost" data-action="divide-all">Divide all</button>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
