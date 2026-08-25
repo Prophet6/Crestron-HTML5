@@ -41,8 +41,15 @@ if (target === 'xpanel') {
   process.exit(1);
 }
 
-const args = ['deploy', '-p', '-H', host, '-t', deviceType, archive, ...extra];
-console.log(`ch5-cli ${args.join(' ')}`);
+function quote(value) {
+  return /[\s"]/.test(value) ? `"${value.replaceAll('"', '\\"')}"` : value;
+}
 
-const child = spawn('ch5-cli', args, { stdio: 'inherit', shell: true });
+// Quote paths: spawn({ shell: true }) on Windows otherwise splits at
+// "Work Files" and ch5-cli looks for C:\Users\...\Work.
+const args = ['deploy', '-p', '-H', host, '-t', deviceType, quote(archive), ...extra];
+const command = ['ch5-cli', ...args].join(' ');
+console.log(command);
+
+const child = spawn(command, { stdio: 'inherit', shell: true });
 child.on('exit', (code) => process.exit(code ?? 1));
