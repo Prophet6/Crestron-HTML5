@@ -49,6 +49,6 @@ https://192.168.86.200/divisible-room/index.html?ipID=E1&authToken=<token>
 https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
 ```
 
-Join map and SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Seed program + SIMPL+ module: [`simpl/`](simpl/).
+Join map (complete): [`docs/JOIN-MAP.md`](../docs/JOIN-MAP.md). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Modules: [`simpl/`](simpl/).
 
 Volume has a slider plus up/down (hold to repeat). Power-off asks for confirmation; power-on does not. Selected sources open a placeholder page for later device info/controls.

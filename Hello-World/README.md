@@ -67,7 +67,7 @@ publishAnalog(Joins.source, Source.Laptop);
 subscribeSerial(Joins.roomName, (name) => { ... });
 ```
 
-Full SIMPL wiring, signal names, and load steps: [`docs/simpl.md`](docs/simpl.md). Compiled `.lpz` is in [`simpl/`](simpl/).
+Join map: [`docs/JOIN-MAP.md`](../docs/JOIN-MAP.md#hello-world). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Compiled `.lpz` is in [`simpl/`](simpl/).
 
 ## Project layout
 

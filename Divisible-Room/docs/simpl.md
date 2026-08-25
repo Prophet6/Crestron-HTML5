@@ -1,5 +1,7 @@
 # SIMPL pairing — Divisible-Room
 
+**Join numbers for every digital / analog / serial:** [JOIN-MAP.md](../../docs/JOIN-MAP.md).
+
 Three rooms in a line: **A — B — C**. A cannot join C unless B is in the same space.
 
 ## Modules

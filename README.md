@@ -15,6 +15,8 @@ This project is not affiliated with Crestron Electronics.
 
 Docs and SIMPL pairing for each project live inside that folder.
 
+**Full join map (both projects):** [docs/JOIN-MAP.md](docs/JOIN-MAP.md)
+
 ## Related repositories
 
 | Repo | Relationship |
