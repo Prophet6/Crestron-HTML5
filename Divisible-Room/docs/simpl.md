@@ -48,6 +48,20 @@ Module **outputs** → panel **FB / analog-to-panel / serial-to-panel**.
 | Power press + FB | 21 | 31 | 41 |
 | Mute press + FB | 22 | 32 | 42 |
 | Laptop / Apple TV / HDMI press + FB | 25–27 | 35–37 | 45–47 |
+| Volume up / down press | 23 / 24 | 33 / 34 | 43 / 44 |
+
+Volume up/down pins were **appended** on `Divisible Room Logic v1.0` so existing SIMPL Windows wiring does not shift. Wire those six digitals to `A_Vol_Up` … `C_Vol_Down`.
+
+### Panels
+
+Same join map on every HTML5 XPanel / TST. Hide rooms in the UI, not in SIMPL.
+
+| Panel | IP-ID | URL |
+|-------|-------|-----|
+| Master | E2 | `?panel=master` |
+| Room A | E3 | `?panel=A` |
+| Room B | E4 | `?panel=B` |
+| Room C | E5 | `?panel=C` |
 
 Source analog: `0` off, `1` laptop, `2` Apple TV, `3` HDMI.
 

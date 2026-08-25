@@ -11,7 +11,7 @@ This project is not affiliated with Crestron Electronics.
 | Folder | What it is | Hardware |
 |--------|------------|----------|
 | [Hello-World](Hello-World/) | First custom CH5 panel: vanilla TypeScript, Vite, CrComLib. Sources, volume, lights, power. Proven on Vite, TST-1080, and processor-hosted Web XPanel. | RMC4, TST-1080 (IP-ID C1), HTML5 XPanel (IP-ID E1) |
-| [Divisible-Room](Divisible-Room/) | Three combinable rooms in a line (A–B–C). Neighbor walls only; A cannot join C without B. | RMC4, HTML5 XPanel (IP-ID E2) |
+| [Divisible-Room](Divisible-Room/) | Three combinable rooms (A–B–C). Master panel sees all rooms; `?panel=A\|B\|C` only sees the current zone. | RMC4, XPanel E2 master / E3–E5 rooms |
 
 Docs and SIMPL pairing for each project live inside that folder.
 

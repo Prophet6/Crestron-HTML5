@@ -3,15 +3,19 @@ import {
   percentToAnalog,
   pulse,
   publishAnalog,
+  startRepeatDigital,
   subscribeAnalog,
   subscribeDigital,
   subscribeSerial,
 } from '../crestron/bridge';
 import { Joins, RoomJoins, Source, type SourceId } from '../crestron/joins';
 import type { ConnectionState, CrestronRuntime } from '../crestron/init';
+import { ipId, panelId, processorHost } from '../config';
 import {
   masterRoom,
   summarize,
+  visibleRooms,
+  visibleWalls,
   zoneForRoom,
   zoneLabel,
   type PartitionState,
@@ -29,6 +33,33 @@ interface RoomUi {
 }
 
 const ROOMS: RoomId[] = ['A', 'B', 'C'];
+const SOURCE_COPY: Record<SourceId, { kicker: string; title: string; body: string; controls: string }> = {
+  [Source.Off]: {
+    kicker: 'Idle',
+    title: 'Choose a source',
+    body: 'This space is waiting for a source. Laptop, Apple TV, and HDMI pages will hold device info and controls here.',
+    controls: '',
+  },
+  [Source.Laptop]: {
+    kicker: 'Laptop',
+    title: 'Table HDMI',
+    body: 'Connect the laptop to the HDMI cable at the table. Device identity and BYOD status will show here.',
+    controls: '<button type="button" class="btn" disabled>Auto-switch (soon)</button>',
+  },
+  [Source.AppleTv]: {
+    kicker: 'Apple TV',
+    title: 'Apple TV',
+    body: 'Now playing and transport controls will live on this page.',
+    controls:
+      '<button type="button" class="btn" disabled>Menu</button><button type="button" class="btn" disabled>Play / Pause</button><button type="button" class="btn" disabled>Home</button>',
+  },
+  [Source.Hdmi]: {
+    kicker: 'HDMI',
+    title: 'Wall plate',
+    body: 'Room HDMI input is routed to the display. Sink / HDCP details will show here.',
+    controls: '<button type="button" class="btn" disabled>Re-sync (soon)</button>',
+  },
+};
 
 export function mountApp(runtime: CrestronRuntime): void {
   const partitions: PartitionState = { wallABOpen: false, wallBCOpen: false };
@@ -37,8 +68,11 @@ export function mountApp(runtime: CrestronRuntime): void {
     B: { source: Source.Off, volume: 0, mute: false, power: false, name: 'B' },
     C: { source: Source.Off, volume: 0, mute: false, power: false, name: 'C' },
   };
+  let pendingPower: RoomId | undefined;
 
   startClock(must('#clock-time'), must('#clock-date'));
+  must('#panel-role').textContent = panelId === 'master' ? 'Master panel' : `Room ${panelId} panel`;
+  must('#cip-detail').textContent = `${processorHost} · IP-ID ${ipId.replace(/^0x/i, '')}`;
   runtime.setConnectionHandler((state, detail) => {
     setConnection(must('#cip-dot'), must('#cip-label'), must('#cip-detail'), state, detail);
   });
@@ -86,8 +120,7 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   document.querySelectorAll<HTMLElement>('[data-wall-toggle]').forEach((el) => {
     el.addEventListener('click', () => {
-      const wall = el.dataset.wallToggle as WallId;
-      toggleWall(wall);
+      toggleWall(el.dataset.wallToggle as WallId);
     });
   });
 
@@ -126,18 +159,18 @@ export function mountApp(runtime: CrestronRuntime): void {
     el.addEventListener('input', () => {
       const room = el.dataset.vol as RoomId;
       rooms[room].volume = Number(el.value);
-      renderVolumeLabels();
+      must(`[data-vol-label="${room}"]`).textContent = `${rooms[room].volume}%`;
     });
     el.addEventListener('change', () => {
-      const room = el.dataset.vol as RoomId;
-      const value = Number(el.value);
-      applyToZone(room, (target, id, master) => {
-        target.volume = value;
-        if (id === master) {
-          publishAnalog(RoomJoins[master].volume, percentToAnalog(value));
-        }
-      });
+      setZoneVolume(el.dataset.vol as RoomId, Number(el.value));
     });
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-vol-up]').forEach((el) => {
+    bindHold(el, el.dataset.volUp as RoomId, 5);
+  });
+  document.querySelectorAll<HTMLElement>('[data-vol-down]').forEach((el) => {
+    bindHold(el, el.dataset.volDown as RoomId, -5);
   });
 
   document.querySelectorAll<HTMLElement>('[data-mute]').forEach((el) => {
@@ -156,15 +189,49 @@ export function mountApp(runtime: CrestronRuntime): void {
   document.querySelectorAll<HTMLElement>('[data-power]').forEach((el) => {
     el.addEventListener('click', () => {
       const room = el.dataset.power as RoomId;
-      const next = !rooms[room].power;
-      applyToZone(room, (target, id, master) => {
-        target.power = next;
-        if (id === master) {
-          pulse(RoomJoins[master].power);
-        }
-      });
+      if (rooms[room].power) {
+        openPowerConfirm(room);
+      } else {
+        setZonePower(room, true);
+      }
     });
   });
+
+  must('[data-action="confirm-power"]').addEventListener('click', () => {
+    if (pendingPower) {
+      setZonePower(pendingPower, false);
+    }
+    closePowerConfirm();
+  });
+  must('[data-action="cancel-power"]').addEventListener('click', closePowerConfirm);
+
+  function bindHold(el: HTMLElement, room: RoomId, delta: number): void {
+    let stopCs: (() => void) | undefined;
+    let timer: number | undefined;
+
+    const step = () => setZoneVolume(room, rooms[room].volume + delta);
+    const down = (event: Event) => {
+      event.preventDefault();
+      step();
+      const master = masterRoom(zoneForRoom(partitions, room));
+      const join = delta > 0 ? RoomJoins[master].volUp : RoomJoins[master].volDown;
+      stopCs = startRepeatDigital(join);
+      timer = window.setInterval(step, 250);
+    };
+    const up = (event: Event) => {
+      event.preventDefault();
+      stopCs?.();
+      stopCs = undefined;
+      if (timer !== undefined) {
+        window.clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    el.addEventListener('pointerleave', up);
+  }
 
   function toggleWall(wall: WallId): void {
     if (wall === 'AB') {
@@ -175,6 +242,43 @@ export function mountApp(runtime: CrestronRuntime): void {
       pulse(partitions.wallBCOpen ? Joins.combineBC : Joins.divideBC);
     }
     render();
+  }
+
+  function setZoneVolume(room: RoomId, percent: number): void {
+    const next = Math.min(100, Math.max(0, Math.round(percent)));
+    applyToZone(room, (target, id, master) => {
+      target.volume = next;
+      if (id === master) {
+        publishAnalog(RoomJoins[master].volume, percentToAnalog(next));
+      }
+    });
+  }
+
+  function setZonePower(room: RoomId, on: boolean): void {
+    applyToZone(room, (target, id, master) => {
+      target.power = on;
+      if (id === master) {
+        pulse(RoomJoins[master].power);
+      }
+    });
+  }
+
+  function openPowerConfirm(room: RoomId): void {
+    pendingPower = room;
+    const zone = zoneForRoom(partitions, room);
+    const names = zone.rooms.map((id) => rooms[id].name).join(' + ');
+    must('#power-confirm-title').textContent =
+      zone.rooms.length > 1 ? `Power off ${names}?` : `Power off ${rooms[room].name}?`;
+    must('#power-confirm-body').textContent =
+      zone.rooms.length > 1
+        ? 'This combined space shares power. Displays and audio in every listed room will shut down.'
+        : 'Displays and audio in this room will shut down.';
+    must('#power-confirm').hidden = false;
+  }
+
+  function closePowerConfirm(): void {
+    pendingPower = undefined;
+    must('#power-confirm').hidden = true;
   }
 
   function applyToZone(
@@ -191,12 +295,21 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   function render(): void {
     must('#config-label').textContent = summarize(partitions);
-    paintWall('AB', partitions.wallABOpen);
-    paintWall('BC', partitions.wallBCOpen);
+    const shownRooms = new Set(visibleRooms(partitions, panelId));
+    const shownWalls = new Set(visibleWalls(partitions, panelId));
+    must('#master-actions').classList.toggle('is-hidden', panelId !== 'master');
+    must('#dock-rule').textContent =
+      panelId === 'master'
+        ? 'A cannot combine with C unless B is in the same space.'
+        : 'You only see rooms currently combined with this space.';
+
+    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'));
+    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'));
 
     for (const id of ROOMS) {
       const zone = zoneForRoom(partitions, id);
       const card = must(`.room[data-room="${id}"]`);
+      card.classList.toggle('is-hidden', !shownRooms.has(id));
       card.dataset.zone = zone.id;
       card.classList.toggle('is-master', masterRoom(zone) === id && zone.rooms.length > 1);
       must(`[data-room-name="${id}"]`).textContent = rooms[id].name;
@@ -210,21 +323,27 @@ export function mountApp(runtime: CrestronRuntime): void {
       must(`[data-vol-label="${id}"]`).textContent = `${rooms[id].volume}%`;
       must(`[data-mute="${id}"]`).classList.toggle('is-selected', rooms[id].mute);
       must(`[data-power="${id}"]`).classList.toggle('is-selected', rooms[id].power);
+      paintSourcePage(id, rooms[id].source);
     }
   }
 
-  function renderVolumeLabels(): void {
-    for (const id of ROOMS) {
-      must(`[data-vol-label="${id}"]`).textContent = `${rooms[id].volume}%`;
-    }
+  function paintSourcePage(room: RoomId, source: SourceId): void {
+    const copy = SOURCE_COPY[source];
+    const page = must(`[data-source-page="${room}"]`);
+    page.classList.toggle('is-active', source !== Source.Off);
+    must(`[data-source-kicker="${room}"]`).textContent = copy.kicker;
+    must(`[data-source-title="${room}"]`).textContent = copy.title;
+    must(`[data-source-body="${room}"]`).textContent = copy.body;
+    must(`[data-source-controls="${room}"]`).innerHTML = copy.controls;
   }
 
   render();
 }
 
-function paintWall(wall: WallId, open: boolean): void {
+function paintWall(wall: WallId, open: boolean, visible: boolean): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
+  el.classList.toggle('is-hidden', !visible);
   must(`[data-wall-state="${wall}"]`).textContent = open ? 'Open' : 'Closed';
   must(`[data-wall-toggle="${wall}"]`).textContent = open ? 'Divide' : 'Combine';
 }

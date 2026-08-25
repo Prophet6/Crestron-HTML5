@@ -10,6 +10,8 @@ Volume analog from the panel is echoed as FB (not a timed ramp). Combined
 rooms follow the leftmost master.
 
 -- VERSION HISTORY --
+v1.1  2026-08-25
+- Volume up/down appended at end of digital inputs (does not shift existing pins)
 v1.0  2026-08-25
 - Walls, per-room source/volume/mute/power, zone follow
 
@@ -19,33 +21,33 @@ v1.0  2026-08-25
 #CATEGORY "1" /* Building Management */
 #DEFAULT_VOLATILE
 
-DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
-				Combine_AB, Divide_AB, Combine_BC, Divide_BC, Combine_All, Divide_All,
+DIGITAL_INPUT	Combine_AB, Divide_AB, Combine_BC, Divide_BC, Combine_All, Divide_All,
 				_SKIP_,
 				A_Power, A_Mute, A_Laptop, A_AppleTV, A_HDMI,
 				_SKIP_,
 				B_Power, B_Mute, B_Laptop, B_AppleTV, B_HDMI,
 				_SKIP_,
-				C_Power, C_Mute, C_Laptop, C_AppleTV, C_HDMI;
+				C_Power, C_Mute, C_Laptop, C_AppleTV, C_HDMI,
+				_SKIP_,
+				A_Vol_Up, A_Vol_Down, B_Vol_Up, B_Vol_Down, C_Vol_Up, C_Vol_Down;
 
-ANALOG_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+ANALOG_INPUT	_SKIP_,
 				A_Volume, B_Volume, C_Volume,
 				A_Source, B_Source, C_Source;
 
-DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
-				Wall_AB_Open, Wall_BC_Open,
-				_SKIP_,
+DIGITAL_OUTPUT	Wall_AB_Open, Wall_BC_Open,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				A_Power_FB, A_Mute_FB, A_Laptop_FB, A_AppleTV_FB, A_HDMI_FB,
 				_SKIP_,
 				B_Power_FB, B_Mute_FB, B_Laptop_FB, B_AppleTV_FB, B_HDMI_FB,
 				_SKIP_,
 				C_Power_FB, C_Mute_FB, C_Laptop_FB, C_AppleTV_FB, C_HDMI_FB;
 
-ANALOG_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+ANALOG_OUTPUT	_SKIP_,
 				A_Volume_FB, B_Volume_FB, C_Volume_FB,
 				A_Source_FB, B_Source_FB, C_Source_FB;
 
-STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+STRING_OUTPUT	_SKIP_,
 				Room_A_Name$, Room_B_Name$, Room_C_Name$;
 
 INTEGER	Wall_AB, Wall_BC;
@@ -151,6 +153,52 @@ Function ApplyZones () {
 	DriveRoom (3);
 }
 
+Function BumpVol (INTEGER room, INTEGER dirUp) {
+	If (room = 1) {
+		If (dirUp = 1) {
+			If (A_Volume_FB > 62258)
+				A_Volume_FB = 65535;
+			Else
+				A_Volume_FB = A_Volume_FB + 3277;
+		}
+		Else {
+			If (A_Volume_FB < 3277)
+				A_Volume_FB = 0;
+			Else
+				A_Volume_FB = A_Volume_FB - 3277;
+		}
+	}
+	If (room = 2) {
+		If (dirUp = 1) {
+			If (B_Volume_FB > 62258)
+				B_Volume_FB = 65535;
+			Else
+				B_Volume_FB = B_Volume_FB + 3277;
+		}
+		Else {
+			If (B_Volume_FB < 3277)
+				B_Volume_FB = 0;
+			Else
+				B_Volume_FB = B_Volume_FB - 3277;
+		}
+	}
+	If (room = 3) {
+		If (dirUp = 1) {
+			If (C_Volume_FB > 62258)
+				C_Volume_FB = 65535;
+			Else
+				C_Volume_FB = C_Volume_FB + 3277;
+		}
+		Else {
+			If (C_Volume_FB < 3277)
+				C_Volume_FB = 0;
+			Else
+				C_Volume_FB = C_Volume_FB - 3277;
+		}
+	}
+	ApplyZones ();
+}
+
 PUSH Combine_AB {
 	Wall_AB = 1;
 	ApplyZones ();
@@ -208,6 +256,13 @@ CHANGE C_Volume { C_Volume_FB = C_Volume; ApplyZones (); }
 CHANGE A_Source { A_Src = A_Source; ApplyZones (); }
 CHANGE B_Source { B_Src = B_Source; ApplyZones (); }
 CHANGE C_Source { C_Src = C_Source; ApplyZones (); }
+
+PUSH A_Vol_Up { BumpVol (1, 1); }
+PUSH A_Vol_Down { BumpVol (1, 0); }
+PUSH B_Vol_Up { BumpVol (2, 1); }
+PUSH B_Vol_Down { BumpVol (2, 0); }
+PUSH C_Vol_Up { BumpVol (3, 1); }
+PUSH C_Vol_Down { BumpVol (3, 0); }
 
 FUNCTION Main () {
 	Wall_AB = 0;

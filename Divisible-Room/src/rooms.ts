@@ -75,3 +75,32 @@ export function summarize(state: PartitionState): string {
 export function masterRoom(zone: Zone): RoomId {
   return zone.rooms[0];
 }
+
+export type PanelId = 'master' | 'A' | 'B' | 'C';
+
+/** Master sees every room. A room panel sees only rooms in its current zone. */
+export function visibleRooms(state: PartitionState, panel: PanelId): RoomId[] {
+  if (panel === 'master') {
+    return ['A', 'B', 'C'];
+  }
+  return zoneForRoom(state, panel).rooms;
+}
+
+/**
+ * Master sees both walls. A room panel sees a wall if it touches the home
+ * room, or if both sides of the wall are already visible.
+ */
+export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
+  if (panel === 'master') {
+    return ['AB', 'BC'];
+  }
+  const rooms = new Set(visibleRooms(state, panel));
+  const walls: WallId[] = [];
+  if (panel === 'A' || panel === 'B' || (rooms.has('A') && rooms.has('B'))) {
+    walls.push('AB');
+  }
+  if (panel === 'C' || panel === 'B' || (rooms.has('B') && rooms.has('C'))) {
+    walls.push('BC');
+  }
+  return walls;
+}

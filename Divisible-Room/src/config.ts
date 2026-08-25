@@ -1,3 +1,5 @@
+import type { PanelId } from './rooms';
+
 const params = new URLSearchParams(window.location.search);
 
 function queryParam(...names: string[]): string | undefined {
@@ -24,11 +26,29 @@ function firstNonEmpty(...values: Array<string | undefined | null>): string | un
   return undefined;
 }
 
+function parsePanel(): PanelId {
+  const raw = (queryParam('panel', 'room') ?? 'master').toUpperCase();
+  if (raw === 'A' || raw === 'B' || raw === 'C') {
+    return raw;
+  }
+  return 'master';
+}
+
+export const panelId: PanelId = parsePanel();
+
+const defaultIpId: Record<PanelId, string> = {
+  master: '0xE2',
+  A: '0xE3',
+  B: '0xE4',
+  C: '0xE5',
+};
+
 export const processorHost =
   firstNonEmpty(queryParam('host'), import.meta.env.VITE_PROCESSOR_HOST) ?? '192.168.86.200';
 
-/** Hello-World uses E1. This project defaults to E2 so both can sit on the RMC4. */
-export const ipId = firstNonEmpty(queryParam('ipid', 'ipId'), import.meta.env.VITE_IP_ID) ?? '0xE2';
+/** Master E2, room panels E3–E5. Override with ?ipId=. */
+export const ipId =
+  firstNonEmpty(queryParam('ipid', 'ipId'), import.meta.env.VITE_IP_ID) ?? defaultIpId[panelId];
 
 export const authToken = queryParam('authtoken', 'authToken');
 

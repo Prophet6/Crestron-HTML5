@@ -15,7 +15,7 @@
     <div id="app" class="shell">
       <header class="header">
         <div>
-          <p class="eyebrow">Divisible room</p>
+          <p class="eyebrow" id="panel-role">Master panel</p>
           <h1 id="config-label">Three independent rooms</h1>
         </div>
         <div class="header__clock">
@@ -41,10 +41,20 @@
             <button type="button" class="btn" data-source="2">Apple TV</button>
             <button type="button" class="btn" data-source="3">HDMI</button>
           </div>
-          <label class="slider-block">
-            <span>Volume <strong data-vol-label="A">0%</strong></span>
-            <input data-vol="A" type="range" min="0" max="100" value="0" />
-          </label>
+          <div class="source-page" data-source-page="A">
+            <p class="source-page__kicker" data-source-kicker="A">No source</p>
+            <h3 data-source-title="A">Choose a source</h3>
+            <p data-source-body="A">This room is idle.</p>
+            <div class="source-page__controls" data-source-controls="A"></div>
+          </div>
+          <div class="vol-row">
+            <button type="button" class="btn btn--hold" data-vol-down="A">−</button>
+            <label class="slider-block">
+              <span>Volume <strong data-vol-label="A">0%</strong></span>
+              <input data-vol="A" type="range" min="0" max="100" value="0" />
+            </label>
+            <button type="button" class="btn btn--hold" data-vol-up="A">+</button>
+          </div>
           <div class="room__row">
             <button type="button" class="btn" data-mute="A">Mute</button>
             <button type="button" class="btn btn--ghost" data-power="A">Power</button>
@@ -68,10 +78,20 @@
             <button type="button" class="btn" data-source="2">Apple TV</button>
             <button type="button" class="btn" data-source="3">HDMI</button>
           </div>
-          <label class="slider-block">
-            <span>Volume <strong data-vol-label="B">0%</strong></span>
-            <input data-vol="B" type="range" min="0" max="100" value="0" />
-          </label>
+          <div class="source-page" data-source-page="B">
+            <p class="source-page__kicker" data-source-kicker="B">No source</p>
+            <h3 data-source-title="B">Choose a source</h3>
+            <p data-source-body="B">This room is idle.</p>
+            <div class="source-page__controls" data-source-controls="B"></div>
+          </div>
+          <div class="vol-row">
+            <button type="button" class="btn btn--hold" data-vol-down="B">−</button>
+            <label class="slider-block">
+              <span>Volume <strong data-vol-label="B">0%</strong></span>
+              <input data-vol="B" type="range" min="0" max="100" value="0" />
+            </label>
+            <button type="button" class="btn btn--hold" data-vol-up="B">+</button>
+          </div>
           <div class="room__row">
             <button type="button" class="btn" data-mute="B">Mute</button>
             <button type="button" class="btn btn--ghost" data-power="B">Power</button>
@@ -95,10 +115,20 @@
             <button type="button" class="btn" data-source="2">Apple TV</button>
             <button type="button" class="btn" data-source="3">HDMI</button>
           </div>
-          <label class="slider-block">
-            <span>Volume <strong data-vol-label="C">0%</strong></span>
-            <input data-vol="C" type="range" min="0" max="100" value="0" />
-          </label>
+          <div class="source-page" data-source-page="C">
+            <p class="source-page__kicker" data-source-kicker="C">No source</p>
+            <h3 data-source-title="C">Choose a source</h3>
+            <p data-source-body="C">This room is idle.</p>
+            <div class="source-page__controls" data-source-controls="C"></div>
+          </div>
+          <div class="vol-row">
+            <button type="button" class="btn btn--hold" data-vol-down="C">−</button>
+            <label class="slider-block">
+              <span>Volume <strong data-vol-label="C">0%</strong></span>
+              <input data-vol="C" type="range" min="0" max="100" value="0" />
+            </label>
+            <button type="button" class="btn btn--hold" data-vol-up="C">+</button>
+          </div>
           <div class="room__row">
             <button type="button" class="btn" data-mute="C">Mute</button>
             <button type="button" class="btn btn--ghost" data-power="C">Power</button>
@@ -107,12 +137,24 @@
       </section>
 
       <footer class="dock">
-        <p class="rule">A cannot combine with C unless B is in the same space.</p>
-        <div class="dock__actions">
+        <p class="rule" id="dock-rule">A cannot combine with C unless B is in the same space.</p>
+        <div class="dock__actions" id="master-actions">
           <button type="button" class="btn" data-action="combine-all">Combine all three</button>
           <button type="button" class="btn btn--ghost" data-action="divide-all">Divide all</button>
         </div>
       </footer>
+
+      <div id="power-confirm" class="overlay" hidden>
+        <div class="overlay__card">
+          <p class="eyebrow">Power</p>
+          <h2 id="power-confirm-title">Power off this room?</h2>
+          <p id="power-confirm-body">Displays and audio in the selected space will shut down.</p>
+          <div class="preset-row">
+            <button type="button" class="btn btn--danger" data-action="confirm-power">Power off</button>
+            <button type="button" class="btn btn--ghost" data-action="cancel-power">Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
