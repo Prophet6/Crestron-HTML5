@@ -9,7 +9,7 @@
  */
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const target = process.argv[2];
 const archive = resolve('archive/crestron-html5.ch5z');
@@ -45,11 +45,22 @@ function quote(value) {
   return /[\s"]/.test(value) ? `"${value.replaceAll('"', '\\"')}"` : value;
 }
 
+const localCli = join(
+  process.cwd(),
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'ch5-cli.cmd' : 'ch5-cli',
+);
+const cli = existsSync(localCli) ? quote(localCli) : 'ch5-cli';
+
+// Do not pass -p when env credentials are set — Crestron ignores env if -p is present.
+const prompt = process.env.CH5CLI_DEPLOY_USER && process.env.CH5CLI_DEPLOY_PW ? [] : ['-p'];
+
 // Quote paths: spawn({ shell: true }) on Windows otherwise splits at
 // "Work Files" and ch5-cli looks for C:\Users\...\Work.
-const args = ['deploy', '-p', '-H', host, '-t', deviceType, quote(archive), ...extra];
-const command = ['ch5-cli', ...args].join(' ');
-console.log(command);
+const args = ['deploy', ...prompt, '-H', host, '-t', deviceType, quote(archive), ...extra];
+const command = [cli, ...args].join(' ');
+console.log(command.replace(archive, quote(archive)));
 
 const child = spawn(command, { stdio: 'inherit', shell: true });
 child.on('exit', (code) => process.exit(code ?? 1));

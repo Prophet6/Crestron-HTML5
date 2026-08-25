@@ -40,6 +40,7 @@
     "eruda": "^3.4.3"
   },
   "devDependencies": {
+    "@crestron/ch5-utilities-cli": "^2.19.0",
     "@types/node": "^26.3.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
