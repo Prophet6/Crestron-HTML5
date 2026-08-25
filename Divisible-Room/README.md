@@ -41,4 +41,6 @@ Processor URL after deploy:
 https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
 ```
 
-Join map: [`docs/simpl.md`](docs/simpl.md).
+Join map and SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Seed program + SIMPL+ module: [`simpl/`](simpl/).
+
+Volume on this page is local until the processor echoes analog FB. Walls/sources work the same way: the UI moves immediately, then SIMPL+ latches and copies the master room onto combined neighbors.
