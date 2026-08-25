@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Crestron HTML5</title>
+    <!--
+      CrComLib is a UMD bundle that attaches to window. Load it before the
+      application module so native TST-1080 bridges and WebXPanel can find it.
+    -->
+    <script src="./cr-com-lib.js"></script>
+  </head>
+  <body>
+    <div id="app" class="shell">
+      <header class="header">
+        <div class="header__room">
+          <p class="eyebrow">Room</p>
+          <h1 id="room-name">Lab</h1>
+        </div>
+        <div class="header__clock">
+          <p id="clock-time">--:--</p>
+          <p id="clock-date" class="eyebrow">—</p>
+        </div>
+        <div class="header__status">
+          <span id="cip-dot" class="status-dot" data-state="connecting" aria-hidden="true"></span>
+          <p id="cip-label">Connecting</p>
+          <p id="cip-detail" class="eyebrow">192.168.86.200 · IP-ID E1</p>
+        </div>
+      </header>
+
+      <main class="stage">
+        <section class="card is-active" id="card-welcome" data-card>
+          <p class="eyebrow">Welcome</p>
+          <h2>Choose a source to start</h2>
+          <p class="lede">
+            This is a custom CH5 panel — vanilla TypeScript, not Construct. Joins go
+            through CrComLib to a 4-Series processor at IP-ID E1.
+          </p>
+        </section>
+
+        <section class="card" id="card-laptop" data-card>
+          <p class="eyebrow">Laptop</p>
+          <h2>Table HDMI</h2>
+          <p class="lede">Connect the laptop to the HDMI cable at the table.</p>
+        </section>
+
+        <section class="card" id="card-appletv" data-card>
+          <p class="eyebrow">Apple TV</p>
+          <h2>Apple TV</h2>
+          <p class="lede">Display is on the Apple TV. IR / CEC transport joins can be added once this source path is proven.</p>
+        </section>
+
+        <section class="card" id="card-hdmi" data-card>
+          <p class="eyebrow">HDMI</p>
+          <h2>Wall plate</h2>
+          <p class="lede">Room HDMI input is routed to the display.</p>
+        </section>
+
+        <section class="card" id="card-lights" data-card>
+          <p class="eyebrow">Lights</p>
+          <h2>Room lighting</h2>
+          <div class="preset-row">
+            <button type="button" class="btn" data-pulse="lightsOn" data-selected="lightsOn">On</button>
+            <button type="button" class="btn" data-pulse="lightsDim" data-selected="lightsDim">Dim</button>
+            <button type="button" class="btn" data-pulse="lightsOff" data-selected="lightsOff">Off</button>
+          </div>
+          <label class="slider-block">
+            <span>Level <strong id="light-value">—</strong></span>
+            <input id="light-slider" type="range" min="0" max="100" value="0" />
+          </label>
+        </section>
+
+        <section class="card card--overlay" id="card-power" data-card>
+          <p class="eyebrow">Power</p>
+          <h2>Shut down the room?</h2>
+          <p class="lede">Display, audio, and lights will power off.</p>
+          <div class="preset-row">
+            <button type="button" class="btn btn--danger" data-action="confirm-power">Shut down</button>
+            <button type="button" class="btn btn--ghost" data-action="cancel-power">Cancel</button>
+          </div>
+        </section>
+      </main>
+
+      <section class="mixer">
+        <div class="mixer__volume">
+          <span>Volume <strong id="volume-value">—</strong></span>
+          <input id="volume-slider" type="range" min="0" max="100" value="0" />
+        </div>
+        <div class="mixer__buttons">
+          <button type="button" class="btn btn--hold" data-hold="volumeDown">−</button>
+          <button type="button" class="btn" data-pulse="mute" data-selected="mute">Mute</button>
+          <button type="button" class="btn btn--hold" data-hold="volumeUp">+</button>
+        </div>
+      </section>
+
+      <nav class="dock" aria-label="Sources">
+        <button type="button" class="dock__btn" data-action="power">
+          <span class="dock__icon">⏻</span>
+          Power
+        </button>
+        <button type="button" class="dock__btn" data-source="1" data-pulse="laptop" data-selected="laptop">
+          <span class="dock__icon">💻</span>
+          Laptop
+        </button>
+        <button type="button" class="dock__btn" data-source="2" data-pulse="appleTv" data-selected="appleTv">
+          <span class="dock__icon">▶</span>
+          Apple TV
+        </button>
+        <button type="button" class="dock__btn" data-source="3" data-pulse="hdmi" data-selected="hdmi">
+          <span class="dock__icon">▭</span>
+          HDMI
+        </button>
+        <button type="button" class="dock__btn" data-action="lights">
+          <span class="dock__icon">💡</span>
+          Lights
+        </button>
+      </nav>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

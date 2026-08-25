@@ -1,0 +1,263 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --bg-elev: #141b24;
+  --bg-elev-2: #1c2530;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f4f7fb;
+  --muted: #9aa8b8;
+  --accent: #3d9cf0;
+  --accent-strong: #5eb0ff;
+  --danger: #e25555;
+  --ok: #3ecf8e;
+  --warn: #e0b445;
+  --radius: 18px;
+  --touch: 88px;
+  font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  touch-action: manipulation;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.shell {
+  display: grid;
+  grid-template-rows: 140px 1fr 120px 160px;
+  height: 100%;
+  width: 100%;
+  padding: 24px 32px 20px;
+  gap: 16px;
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(61, 156, 240, 0.18), transparent 60%),
+    radial-gradient(900px 400px at 0% 100%, rgba(62, 207, 142, 0.08), transparent 55%),
+    var(--bg);
+}
+
+.header,
+.mixer,
+.dock,
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.4fr;
+  align-items: center;
+  padding: 20px 32px;
+}
+
+.header__clock {
+  text-align: center;
+}
+
+.header__status {
+  text-align: right;
+}
+
+.header h1,
+.header #clock-time {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 0 6px rgba(224, 180, 69, 0.16);
+  vertical-align: middle;
+}
+
+.status-dot[data-state="online"],
+.status-dot[data-state="native"] {
+  background: var(--ok);
+  box-shadow: 0 0 0 6px rgba(62, 207, 142, 0.16);
+}
+
+.status-dot[data-state="offline"],
+.status-dot[data-state="error"] {
+  background: var(--danger);
+  box-shadow: 0 0 0 6px rgba(226, 85, 85, 0.16);
+}
+
+#cip-label {
+  display: inline;
+  margin: 0;
+  font-size: 22px;
+}
+
+.stage {
+  position: relative;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  display: none;
+  padding: 48px 56px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.card.is-active {
+  display: flex;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 64px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+
+.lede {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 28px;
+  line-height: 1.35;
+}
+
+.preset-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.btn,
+.dock__btn {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn:active,
+.dock__btn:active {
+  transform: scale(0.98);
+}
+
+.btn.is-selected,
+.dock__btn.is-selected {
+  border-color: var(--accent);
+  background: rgba(61, 156, 240, 0.18);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.btn--danger {
+  background: #4a1b1b;
+  border-color: rgba(226, 85, 85, 0.5);
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+.btn--hold {
+  font-size: 36px;
+  width: 96px;
+}
+
+.slider-block,
+.mixer__volume {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 22px;
+  color: var(--muted);
+}
+
+input[type='range'] {
+  width: 100%;
+  height: 28px;
+  accent-color: var(--accent-strong);
+}
+
+.mixer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 28px;
+}
+
+.mixer__buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.dock {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  padding: 12px;
+}
+
+.dock__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 18px;
+}
+
+.dock__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+@media (max-width: 1280px) {
+  .shell {
+    grid-template-rows: 110px 1fr 110px 140px;
+    padding: 12px;
+  }
+
+  .header h1,
+  .header #clock-time,
+  .card h2 {
+    font-size: 32px;
+  }
+
+  .lede {
+    font-size: 20px;
+  }
+}
