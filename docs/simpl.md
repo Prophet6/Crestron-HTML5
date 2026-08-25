@@ -79,14 +79,20 @@ npm run dev
 
 Open http://localhost:5173. Header should go to **CIP online**. SIMPL Debugger should show the signals above.
 
-Packaged XPanel on the processor:
+Packaged XPanel on the processor (Toolbox **Web Pages and Mobility Projects** is the same as `npm run deploy:xpanel`):
 
 ```bash
 npm run build:ch5z
 npm run deploy:xpanel
 ```
 
-Browser: https://192.168.86.200/crestron-html5/index.html
+Browser:
+
+```
+https://192.168.86.200/crestron-html5/index.html?ipID=E1&authToken=<token>
+```
+
+`ipID` / `ipId` and `authToken` / `authtoken` are accepted. Do not commit the JWT. `https://192.168.86.200/` may redirect to the last web project after Toolbox has deployed one.
 
 Physical TST-1080:
 

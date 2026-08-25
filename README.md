@@ -15,9 +15,17 @@ Vanilla TypeScript + Vite. The only required Crestron runtime is **CrComLib**. *
 | Panel | TST-1080, **1920×1200** (16:10) |
 | SIMPL program | [`simpl/Testing HTML5 Interfaces.smw`](simpl/Testing%20HTML5%20Interfaces.smw) |
 
-This combination is proven: Vite + CrComLib in Chrome talks to the RMC4 at IP-ID E1.
+This combination is proven on three paths: Vite → processor, TST-1080 native `.ch5z`, and processor-hosted Web XPanel.
 
-Override host / IP-ID with `.env` (`VITE_PROCESSOR_HOST`, `VITE_IP_ID`) or URL query (`?host=192.168.86.200&ipId=0xE1`). Add `?debug=1` to open Eruda on the panel.
+Override host / IP-ID with `.env` (`VITE_PROCESSOR_HOST`, `VITE_IP_ID`) or URL query (`?host=`, `?ipId=` / `?ipID=`). Add `?debug=1` to open Eruda.
+
+Processor-hosted UI (Toolbox **Web Pages and Mobility Projects**, or `npm run deploy:xpanel`):
+
+```
+https://192.168.86.200/crestron-html5/index.html?ipID=E1&authToken=<token>
+```
+
+Create the token on the processor (user **Token** or equivalent). Do **not** commit a live JWT. Tokens expire; treat the URL like a password.
 
 ## Why this stack
 

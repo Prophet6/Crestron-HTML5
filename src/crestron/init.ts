@@ -1,5 +1,5 @@
 import { getWebXPanel, runsInContainerApp } from '@crestron/ch5-webxpanel';
-import { ipId, processorHost } from '../config';
+import { authToken, ipId, processorHost } from '../config';
 import type { CrComLibApi } from './types';
 
 export type ConnectionState = 'native' | 'connecting' | 'online' | 'offline' | 'error';
@@ -45,12 +45,20 @@ export function initCrestron(): CrestronRuntime {
   }
 
   // Do not pass roomId — this project is 4-Series only, not VC-4.
-  const configuration = {
+  // Do not pass empty authToken; Crestron treats omitted vs empty differently.
+  const configuration: { host: string; ipId: string; authToken?: string } = {
     host: processorHost,
     ipId,
   };
+  if (authToken) {
+    configuration.authToken = authToken;
+  }
 
-  console.info('Initializing WebXPanel', configuration);
+  console.info('Initializing WebXPanel', {
+    host: configuration.host,
+    ipId: configuration.ipId,
+    authToken: configuration.authToken ? '(present)' : '(none)',
+  });
   notify('connecting', `${processorHost} IP-ID ${ipId}`);
   WebXPanel.initialize(configuration);
 
