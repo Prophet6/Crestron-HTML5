@@ -6,13 +6,17 @@ on:
   pull_request:
 
 jobs:
-  build:
+  hello-world:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Hello-World
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: Hello-World/package-lock.json
       - run: npm ci
       - run: npm run build

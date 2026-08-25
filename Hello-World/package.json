@@ -1,8 +1,8 @@
 {
-  "name": "crestron-html5",
+  "name": "hello-world",
   "version": "0.1.0",
-  "private": false,
-  "description": "Custom Crestron HTML5 (CH5) user interface outside Construct — vanilla TypeScript, Vite, and CrComLib.",
+  "private": true,
+  "description": "Hello-World: first custom Crestron HTML5 (CH5) UI outside Construct — vanilla TypeScript, Vite, and CrComLib.",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "archive": "ch5-cli archive -p crestron-html5 -d dist -o archive",
+    "archive": "ch5-cli archive -p hello-world -d dist -o archive",
     "build:ch5z": "npm run build && npm run archive",
     "deploy:xpanel": "node scripts/deploy.mjs xpanel",
     "deploy:panel": "node scripts/deploy.mjs panel"
@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/Prophet6/Crestron-HTML5/issues"
   },
-  "homepage": "https://github.com/Prophet6/Crestron-HTML5#readme",
+  "homepage": "https://github.com/Prophet6/Crestron-HTML5/tree/main/Hello-World",
   "keywords": [
     "crestron",
     "ch5",

@@ -1,6 +1,6 @@
 # SIMPL Windows pairing
 
-Lab program: [`simpl/Testing HTML5 Interfaces.smw`](../simpl/Testing%20HTML5%20Interfaces.smw)
+Lab program: [`simpl/Testing HTML5 Interfaces.smw`](../simpl/Testing%20HTML5%20Interfaces.smw) (Hello-World project).
 
 This UI is a custom CH5 project. In SIMPL it is **not** a Smart Graphics panel.
 
@@ -74,6 +74,7 @@ UI names are from `src/crestron/joins.ts`. SIMPL names are from the lab program.
 Fastest path (no `.ch5z` on the processor):
 
 ```bash
+cd Hello-World
 npm run dev
 ```
 
@@ -89,7 +90,7 @@ npm run deploy:xpanel
 Browser:
 
 ```
-https://192.168.86.200/crestron-html5/index.html?ipID=E1&authToken=<token>
+https://192.168.86.200/hello-world/index.html?ipID=E1&authToken=<token>
 ```
 
 `ipID` / `ipId` and `authToken` / `authtoken` are accepted. Do not commit the JWT. `https://192.168.86.200/` may redirect to the last web project after Toolbox has deployed one.

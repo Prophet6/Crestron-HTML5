@@ -12,7 +12,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const target = process.argv[2];
-const archive = resolve('archive/crestron-html5.ch5z');
+const archive = resolve('archive/hello-world.ch5z');
 const processorHost = process.env.PROCESSOR_HOST ?? process.env.VITE_PROCESSOR_HOST ?? '192.168.86.200';
 const panelHost = process.env.PANEL_HOST;
 
