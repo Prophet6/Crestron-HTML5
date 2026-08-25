@@ -11,3 +11,16 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# SIMPL Windows: canonical copies live in simpl/
+SPlsWork/
+*.ASV
+*.lpz.hash
+*_archive.zip
+*_compiled.zip
+/*.smw
+/*.sm2
+/*.smft
+/*.lpz
+/*.sig
+/*.dip

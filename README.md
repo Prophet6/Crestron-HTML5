@@ -8,10 +8,14 @@ Vanilla TypeScript + Vite. The only required Crestron runtime is **CrComLib**. *
 
 | | |
 |---|---|
-| Processor | `192.168.86.200` (4-Series) |
-| IP-ID | `E1` (`0xE1` / 225) — experimental |
+| Processor | RMC4 at `192.168.86.200` |
+| HTML5 XPanel IP-ID | `E1` (`0xE1` / 225) |
+| TST-1080 IP-ID | `C1` |
 | VC-4 room | none |
 | Panel | TST-1080, **1920×1200** (16:10) |
+| SIMPL program | [`simpl/Testing HTML5 Interfaces.smw`](simpl/Testing%20HTML5%20Interfaces.smw) |
+
+This combination is proven: Vite + CrComLib in Chrome talks to the RMC4 at IP-ID E1.
 
 Override host / IP-ID with `.env` (`VITE_PROCESSOR_HOST`, `VITE_IP_ID`) or URL query (`?host=192.168.86.200&ipId=0xE1`). Add `?debug=1` to open Eruda on the panel.
 
@@ -52,7 +56,7 @@ publishAnalog(Joins.source, Source.Laptop);
 subscribeSerial(Joins.roomName, (name) => { ... });
 ```
 
-Full SIMPL wiring is in [`docs/simpl.md`](docs/simpl.md).
+Full SIMPL wiring, signal names, and load steps: [`docs/simpl.md`](docs/simpl.md). Compiled `.lpz` is in [`simpl/`](simpl/).
 
 ## Project layout
 
@@ -60,6 +64,7 @@ Full SIMPL wiring is in [`docs/simpl.md`](docs/simpl.md).
 src/crestron/   WebXPanel first, CrComLib on window, join helpers
 src/ui/         AV-room shell (sources, volume, lights, power)
 src/styles/     TST-1080 1920×1200 layout
+simpl/          RMC4 lab program (.smw / .lpz)
 scripts/        ch5-cli deploy wrappers
 ```
 
