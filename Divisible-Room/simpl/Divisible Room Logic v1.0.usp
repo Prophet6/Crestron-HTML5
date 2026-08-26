@@ -15,6 +15,9 @@ sensor change or last override press wins.
 Selecting a source powers that room on. Powering off clears the source.
 
 -- VERSION HISTORY --
+v1.3  2026-08-26
+- Last-source memory on power-on; sensor startup no longer auto-combines
+- Per-wall Combine/Divide appended; volume CHANGE does not follow when divided
 v1.2  2026-08-25
 - Sense inputs + last-wins override; source powers on; power off clears source
 v1.1  2026-08-25
@@ -28,7 +31,7 @@ v1.0  2026-08-25
 #CATEGORY "1" /* Building Management */
 #DEFAULT_VOLATILE
 
-DIGITAL_INPUT	Wall_AB_Sense, Wall_BC_Sense, Combine_AB, Divide_AB, Combine_BC, Divide_BC,
+DIGITAL_INPUT	Wall_AB_Sense, Wall_BC_Sense,
 				_SKIP_,
 				A_Power, A_Mute, A_Laptop, A_AppleTV, A_HDMI,
 				_SKIP_,
@@ -38,29 +41,35 @@ DIGITAL_INPUT	Wall_AB_Sense, Wall_BC_Sense, Combine_AB, Divide_AB, Combine_BC, D
 				_SKIP_,
 				A_Vol_Up, A_Vol_Down, B_Vol_Up, B_Vol_Down, C_Vol_Up, C_Vol_Down,
 				_SKIP_,
-				Combine_All, Divide_All;
+				Combine_All, Divide_All,
+				_SKIP_,
+				Combine_AB, Divide_AB, Combine_BC, Divide_BC;
 
 ANALOG_INPUT	_SKIP_,
 				A_Volume, B_Volume, C_Volume,
+				_SKIP_,
 				A_Source, B_Source, C_Source;
 
 DIGITAL_OUTPUT	Wall_AB_Open, Wall_BC_Open,
-				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_,
 				A_Power_FB, A_Mute_FB, A_Laptop_FB, A_AppleTV_FB, A_HDMI_FB,
 				_SKIP_,
 				B_Power_FB, B_Mute_FB, B_Laptop_FB, B_AppleTV_FB, B_HDMI_FB,
 				_SKIP_,
 				C_Power_FB, C_Mute_FB, C_Laptop_FB, C_AppleTV_FB, C_HDMI_FB;
 
-ANALOG_OUTPUT	_SKIP_,
+ANALOG_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				A_Volume_FB, B_Volume_FB, C_Volume_FB,
+				_SKIP_,
 				A_Source_FB, B_Source_FB, C_Source_FB;
 
 STRING_OUTPUT	_SKIP_,
 				Room_A_Name$, Room_B_Name$, Room_C_Name$;
 
 INTEGER	Wall_AB, Wall_BC;
+INTEGER	AB_Sense_Prev, BC_Sense_Prev, AB_Sense_Armed, BC_Sense_Armed;
 INTEGER	A_Src, B_Src, C_Src;
+INTEGER	A_LastSrc, B_LastSrc, C_LastSrc;
 INTEGER	A_Pwr, B_Pwr, C_Pwr;
 INTEGER	A_Mut, B_Mut, C_Mut;
 
@@ -146,6 +155,7 @@ Function ApplyZones () {
 	Wall_AB_Open = Wall_AB;
 	Wall_BC_Open = Wall_BC;
 
+	/* Follow only when that wall is actually open. Separate rooms keep their own source/volume. */
 	If ((Wall_AB = 1) && (Wall_BC = 1)) {
 		FollowMaster (1, 2);
 		FollowMaster (1, 3);
@@ -160,6 +170,96 @@ Function ApplyZones () {
 	DriveRoom (1);
 	DriveRoom (2);
 	DriveRoom (3);
+}
+
+Function RememberSrc (INTEGER room, INTEGER src) {
+	If (src > 0) {
+		If (room = 1) A_LastSrc = src;
+		If (room = 2) B_LastSrc = src;
+		If (room = 3) C_LastSrc = src;
+	}
+}
+
+Function SetRoomSrc (INTEGER room, INTEGER src) {
+	If (room = 1) {
+		A_Src = src;
+		A_Pwr = 1;
+		RememberSrc (1, src);
+	}
+	If (room = 2) {
+		B_Src = src;
+		B_Pwr = 1;
+		RememberSrc (2, src);
+	}
+	If (room = 3) {
+		C_Src = src;
+		C_Pwr = 1;
+		RememberSrc (3, src);
+	}
+	ApplyZones ();
+}
+
+Function PowerToggle (INTEGER room) {
+	If (room = 1) {
+		If (A_Pwr = 1) {
+			A_Pwr = 0;
+			A_Src = 0;
+		}
+		Else {
+			A_Pwr = 1;
+			A_Src = A_LastSrc;
+		}
+	}
+	If (room = 2) {
+		If (B_Pwr = 1) {
+			B_Pwr = 0;
+			B_Src = 0;
+		}
+		Else {
+			B_Pwr = 1;
+			B_Src = B_LastSrc;
+		}
+	}
+	If (room = 3) {
+		If (C_Pwr = 1) {
+			C_Pwr = 0;
+			C_Src = 0;
+		}
+		Else {
+			C_Pwr = 1;
+			C_Src = C_LastSrc;
+		}
+	}
+	ApplyZones ();
+}
+
+/*
+ * Sense is held high while a wall is present (rooms divided).
+ * Ignore the startup CHANGE (unwired = 0 would otherwise mean "wall gone" and combine).
+ * After that, rising edge divides, falling edge combines. Override presses still win.
+ */
+Function SenseWall (INTEGER wall, INTEGER present, INTEGER prev, INTEGER armed) {
+	If (armed = 0) {
+		If (wall = 1) AB_Sense_Armed = 1;
+		If (wall = 2) BC_Sense_Armed = 1;
+		If (present = 1) {
+			If (wall = 1) Wall_AB = 0;
+			If (wall = 2) Wall_BC = 0;
+		}
+	}
+	Else {
+		If ((present = 1) && (prev = 0)) {
+			If (wall = 1) Wall_AB = 0;
+			If (wall = 2) Wall_BC = 0;
+		}
+		If ((present = 0) && (prev = 1)) {
+			If (wall = 1) Wall_AB = 1;
+			If (wall = 2) Wall_BC = 1;
+		}
+	}
+	If (wall = 1) AB_Sense_Prev = present;
+	If (wall = 2) BC_Sense_Prev = present;
+	ApplyZones ();
 }
 
 Function BumpVol (INTEGER room, INTEGER dirUp) {
@@ -208,6 +308,18 @@ Function BumpVol (INTEGER room, INTEGER dirUp) {
 	ApplyZones ();
 }
 
+PUSH Combine_All {
+	Wall_AB = 1;
+	Wall_BC = 1;
+	ApplyZones ();
+}
+
+PUSH Divide_All {
+	Wall_AB = 0;
+	Wall_BC = 0;
+	ApplyZones ();
+}
+
 PUSH Combine_AB {
 	Wall_AB = 1;
 	ApplyZones ();
@@ -228,86 +340,48 @@ PUSH Divide_BC {
 	ApplyZones ();
 }
 
-PUSH Combine_All {
-	Wall_AB = 1;
-	Wall_BC = 1;
-	ApplyZones ();
-}
-
-PUSH Divide_All {
-	Wall_AB = 0;
-	Wall_BC = 0;
-	ApplyZones ();
-}
-
-PUSH A_Power {
-	If (A_Pwr = 1) {
-		A_Pwr = 0;
-		A_Src = 0;
-	}
-	Else {
-		A_Pwr = 1;
-	}
-	ApplyZones ();
-}
-PUSH B_Power {
-	If (B_Pwr = 1) {
-		B_Pwr = 0;
-		B_Src = 0;
-	}
-	Else {
-		B_Pwr = 1;
-	}
-	ApplyZones ();
-}
-PUSH C_Power {
-	If (C_Pwr = 1) {
-		C_Pwr = 0;
-		C_Src = 0;
-	}
-	Else {
-		C_Pwr = 1;
-	}
-	ApplyZones ();
-}
+PUSH A_Power { PowerToggle (1); }
+PUSH B_Power { PowerToggle (2); }
+PUSH C_Power { PowerToggle (3); }
 
 PUSH A_Mute { If (A_Mut = 1) A_Mut = 0; Else A_Mut = 1; ApplyZones (); }
 PUSH B_Mute { If (B_Mut = 1) B_Mut = 0; Else B_Mut = 1; ApplyZones (); }
 PUSH C_Mute { If (C_Mut = 1) C_Mut = 0; Else C_Mut = 1; ApplyZones (); }
 
-PUSH A_Laptop { A_Src = 1; A_Pwr = 1; ApplyZones (); }
-PUSH A_AppleTV { A_Src = 2; A_Pwr = 1; ApplyZones (); }
-PUSH A_HDMI { A_Src = 3; A_Pwr = 1; ApplyZones (); }
-PUSH B_Laptop { B_Src = 1; B_Pwr = 1; ApplyZones (); }
-PUSH B_AppleTV { B_Src = 2; B_Pwr = 1; ApplyZones (); }
-PUSH B_HDMI { B_Src = 3; B_Pwr = 1; ApplyZones (); }
-PUSH C_Laptop { C_Src = 1; C_Pwr = 1; ApplyZones (); }
-PUSH C_AppleTV { C_Src = 2; C_Pwr = 1; ApplyZones (); }
-PUSH C_HDMI { C_Src = 3; C_Pwr = 1; ApplyZones (); }
+PUSH A_Laptop { SetRoomSrc (1, 1); }
+PUSH A_AppleTV { SetRoomSrc (1, 2); }
+PUSH A_HDMI { SetRoomSrc (1, 3); }
+PUSH B_Laptop { SetRoomSrc (2, 1); }
+PUSH B_AppleTV { SetRoomSrc (2, 2); }
+PUSH B_HDMI { SetRoomSrc (2, 3); }
+PUSH C_Laptop { SetRoomSrc (3, 1); }
+PUSH C_AppleTV { SetRoomSrc (3, 2); }
+PUSH C_HDMI { SetRoomSrc (3, 3); }
 
 CHANGE Wall_AB_Sense {
-	If (Wall_AB_Sense = 1)
-		Wall_AB = 0;
-	Else
-		Wall_AB = 1;
-	ApplyZones ();
+	SenseWall (1, Wall_AB_Sense, AB_Sense_Prev, AB_Sense_Armed);
 }
 
 CHANGE Wall_BC_Sense {
-	If (Wall_BC_Sense = 1)
-		Wall_BC = 0;
-	Else
-		Wall_BC = 1;
-	ApplyZones ();
+	SenseWall (2, Wall_BC_Sense, BC_Sense_Prev, BC_Sense_Armed);
 }
 
-CHANGE A_Volume { A_Volume_FB = A_Volume; ApplyZones (); }
-CHANGE B_Volume { B_Volume_FB = B_Volume; ApplyZones (); }
-CHANGE C_Volume { C_Volume_FB = C_Volume; ApplyZones (); }
+CHANGE A_Volume {
+	A_Volume_FB = A_Volume;
+	If (Wall_AB = 1) ApplyZones ();
+}
+CHANGE B_Volume {
+	B_Volume_FB = B_Volume;
+	If ((Wall_AB = 1) || (Wall_BC = 1)) ApplyZones ();
+}
+CHANGE C_Volume {
+	C_Volume_FB = C_Volume;
+	If (Wall_BC = 1) ApplyZones ();
+}
 
-CHANGE A_Source { A_Src = A_Source; ApplyZones (); }
-CHANGE B_Source { B_Src = B_Source; ApplyZones (); }
-CHANGE C_Source { C_Src = C_Source; ApplyZones (); }
+CHANGE A_Source { A_Src = A_Source; RememberSrc (1, A_Src); If (A_Src > 0) A_Pwr = 1; ApplyZones (); }
+CHANGE B_Source { B_Src = B_Source; RememberSrc (2, B_Src); If (B_Src > 0) B_Pwr = 1; ApplyZones (); }
+CHANGE C_Source { C_Src = C_Source; RememberSrc (3, C_Src); If (C_Src > 0) C_Pwr = 1; ApplyZones (); }
 
 PUSH A_Vol_Up { BumpVol (1, 1); }
 PUSH A_Vol_Down { BumpVol (1, 0); }
@@ -328,6 +402,13 @@ FUNCTION Main () {
 	A_Mut = 0;
 	B_Mut = 0;
 	C_Mut = 0;
+	A_LastSrc = 0;
+	B_LastSrc = 0;
+	C_LastSrc = 0;
+	AB_Sense_Prev = 0;
+	BC_Sense_Prev = 0;
+	AB_Sense_Armed = 0;
+	BC_Sense_Armed = 0;
 	Room_A_Name$ = "Room A";
 	Room_B_Name$ = "Room B";
 	Room_C_Name$ = "Room C";

@@ -108,7 +108,10 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 |------|-----|
 | 1 | Wall_AB_Open FB |
 | 2 | Wall_BC_Open FB |
-| 3–6 | *Open on current Logic module* (UI per-wall combine/divide if you add those pins) |
+| 3 | Combine_AB override press (appended on Logic module) |
+| 4 | Divide_AB override press |
+| 5 | Combine_BC override press |
+| 6 | Divide_BC override press |
 | 7 | Combine_All press |
 | 8 | Divide_All press |
 | 9–10 | Open |

@@ -102,9 +102,6 @@ export function mountApp(runtime: CrestronRuntime): void {
     if (assigned) {
       homeRoom = assigned;
     }
-    if (value === 0) {
-      masterMode = true;
-    }
     render();
   });
   subscribeSerial(Joins.nameA, (value) => {
