@@ -39,6 +39,22 @@ Symbol: **Divisible Room Identity** ([`Divisible Room Identity.usp`](../Divisibl
 
 Parameter `Panel_Role` is a SIMPL Windows **list**: Master Panel (`0d`), Room A (`1d`), Room B (`2d`), Room C (`3d`). Default Master Panel. Runtime analog `Assign_Override` 1–3 still wins over the parameter.
 
+### Power Shutdown Confirmation v1.0 (per XPanel)
+
+Symbol from [Crestron-Modules](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation). **One instance per HTML5 panel** — do not fan one instance to E1/E2/E3.
+
+| XPanel join | Type | Dir | S+ signal | Notes |
+|-------------|------|-----|-----------|--------|
+| Digital 14 | Digital | Panel → module | `Initiate` | OFF while the zone is on |
+| Digital 15 | Digital | Panel → module | `Cancel` | Dismiss, no power off |
+| Digital 16 | Digital | Panel → module | `Confirm` | User confirmed |
+| Digital 17 | Digital | Module → panel | `Warning_Page_FB` | Overlay visibility |
+| Digital 18 | Digital | Module → panel | `Shutdown_OS` | CH5 pulses that zone’s Power join |
+| Analog 11 | Analog | Module → panel | `Analog_Count_FB` | Seconds remaining |
+| Serial 4 | Serial | Module → panel | `Serial_Count_FB` | Countdown text |
+
+Optional `Time_Override` (analog in on the module) is not a panel join. `Countdown_Time` / `String_Format` are parameters. Do **not** also wire `Shutdown_OS` to Logic `A_Power` / `B_Power` / `C_Power` — the interface already pulses the zone Power join.
+
 ### Sensors (not panel joins)
 
 Wire room partition sensors to the **core** module. Held high while the sensor **sees a wall** (wall present → rooms divided).
@@ -116,7 +132,12 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 | 8 | Divide_All (master) |
 | 9–12 | Open |
 | 13 | Master_Mode_FB |
-| 14–20 | Open |
+| 14 | Shutdown Initiate |
+| 15 | Shutdown Cancel |
+| 16 | Shutdown Confirm |
+| 17 | Warning_Page_FB |
+| 18 | Shutdown_OS |
+| 19–20 | Open |
 | 21–27 | Room A (power, mute, vol ±, laptop, ATV, HDMI) |
 | 28–30 | Open |
 | 31–37 | Room B |
@@ -130,7 +151,8 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 |------|-----|
 | 1–9 | Open |
 | 10 | Room_Assign FB |
-| 11–20 | Open |
+| 11 | Analog_Count_FB (seconds remaining) |
+| 12–20 | Open |
 | 21 | A source |
 | 22 | A volume |
 | 23–30 | Open |
@@ -148,7 +170,8 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 | 1 | Room A name |
 | 2 | Room B name |
 | 3 | Room C name |
-| 4–10 | Open |
+| 4 | Serial_Count_FB (shutdown countdown) |
+| 5–10 | Open |
 
 ---
 

@@ -19,6 +19,20 @@ export const Joins = {
   nameA: { type: 's', name: '1' } satisfies SerialJoin,
   nameB: { type: 's', name: '2' } satisfies SerialJoin,
   nameC: { type: 's', name: '3' } satisfies SerialJoin,
+
+  /**
+   * Power Shutdown Confirmation v1.0 — one instance per XPanel, not fanned.
+   * https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation
+   */
+  powerConfirm: {
+    initiate: { type: 'b', name: '14' } satisfies DigitalJoin,
+    cancel: { type: 'b', name: '15' } satisfies DigitalJoin,
+    confirm: { type: 'b', name: '16' } satisfies DigitalJoin,
+    warningPage: { type: 'b', name: '17' } satisfies DigitalJoin,
+    shutdown: { type: 'b', name: '18' } satisfies DigitalJoin,
+    countSerial: { type: 's', name: '4' } satisfies SerialJoin,
+    countAnalog: { type: 'n', name: '11' } satisfies AnalogJoin,
+  },
 } as const;
 
 export const RoomJoins = {

@@ -15,8 +15,12 @@ One **core** module owns walls, sources, and volume. One **identity** module is 
    - Parameter `Panel_Role`: `1` on E1, `2` on E2, `3` on E3, `0` on a master panel
    - Digital 13 ← `Master_Mode_FB`
    - Analog 10 ← `Room_Assign`
-3. Leave `Master_Mode` unwired on room panels. Tie it high to promote that panel to master layout.
-4. Optional `Assign_Override`: analog `0` (or unwired) uses the parameter; `1` / `2` / `3` forces Room A / B / C at runtime.
+3. On **each** XPanel, drop **Power Shutdown Confirmation v1.0** from [Crestron-Modules](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (do not fan):
+   - Digital 14 / 15 / 16 ← `Initiate` / `Cancel` / `Confirm`
+   - Digital 17 / 18 → `Warning_Page_FB` / `Shutdown_OS`
+   - Analog 11 → `Analog_Count_FB`, Serial 4 → `Serial_Count_FB`
+4. Leave `Master_Mode` unwired on room panels. Tie it high to promote that panel to master layout.
+5. Optional `Assign_Override`: analog `0` (or unwired) uses the parameter; `1` / `2` / `3` forces Room A / B / C at runtime.
 
 Replace any leftover **Divisible Room A / B / C / Master** symbols with this one. Those files are removed.
 

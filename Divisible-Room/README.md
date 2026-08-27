@@ -55,4 +55,4 @@ https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
 
 Join map (complete): [`docs/JOIN-MAP.md`](../docs/JOIN-MAP.md). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Modules: [`simpl/`](simpl/).
 
-Volume has a slider plus up/down (hold to repeat) and mute, on their own card. Power sits with the source buttons; power-off asks for confirmation, power-on does not. The idle/source page fills the rest of the source card.
+Volume has a slider plus up/down (hold to repeat) and mute, on their own card. OFF sits with the source buttons. Power-off uses [Power Shutdown Confirmation v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (one instance per panel) for the overlay and countdown; power-on does not. The idle/source page fills the rest of the source card.

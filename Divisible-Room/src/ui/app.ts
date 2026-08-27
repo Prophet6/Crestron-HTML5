@@ -77,6 +77,7 @@ export function mountApp(runtime: CrestronRuntime): void {
     C: { source: Source.Off, volume: 0, mute: false, power: false, name: 'C' },
   };
   let pendingPower: RoomId | undefined;
+  let linked = false;
   let masterMode = queryMaster;
   let homeRoom: RoomId = roomFromIpId(ipId) ?? 'A';
   let mountedKey = '';
@@ -87,6 +88,7 @@ export function mountApp(runtime: CrestronRuntime): void {
   startClock(must('#clock-time'), must('#clock-date'));
   must('#cip-detail').textContent = `${processorHost} · IP-ID ${ipId.replace(/^0x/i, '')}`;
   runtime.setConnectionHandler((state, detail) => {
+    linked = state === 'online' || state === 'native';
     setConnection(must('#cip-dot'), must('#cip-label'), must('#cip-detail'), state, detail);
   });
 
@@ -193,7 +195,7 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     if (rooms[room].power) {
-      openPowerConfirm(room);
+      requestShutdown(room);
     }
   });
 
@@ -233,12 +235,41 @@ export function mountApp(runtime: CrestronRuntime): void {
   zonesEl.addEventListener('pointercancel', stopHold);
 
   must('[data-action="confirm-power"]').addEventListener('click', () => {
-    if (pendingPower) {
-      setZonePower(pendingPower, false);
+    pulse(Joins.powerConfirm.confirm);
+    if (!linked && pendingPower) {
+      const room = pendingPower;
+      pendingPower = undefined;
+      setZonePower(room, false);
+      setConfirmVisible(false);
     }
-    closePowerConfirm();
   });
-  must('[data-action="cancel-power"]').addEventListener('click', closePowerConfirm);
+  must('[data-action="cancel-power"]').addEventListener('click', () => {
+    pulse(Joins.powerConfirm.cancel);
+    if (!linked) {
+      pendingPower = undefined;
+      setConfirmVisible(false);
+    }
+  });
+
+  subscribeDigital(Joins.powerConfirm.warningPage, (value) => {
+    setConfirmVisible(value);
+  });
+  subscribeDigital(Joins.powerConfirm.shutdown, (value) => {
+    if (value && pendingPower) {
+      const room = pendingPower;
+      pendingPower = undefined;
+      setZonePower(room, false);
+    }
+  });
+  subscribeSerial(Joins.powerConfirm.countSerial, (value) => {
+    must('#power-confirm-count').textContent = value.trim();
+  });
+  subscribeAnalog(Joins.powerConfirm.countAnalog, (value) => {
+    const el = must('#power-confirm-count');
+    if (!el.textContent.trim()) {
+      el.textContent = String(value);
+    }
+  });
 
   function currentPanel() {
     return panelFromState(masterMode, homeRoom);
@@ -299,7 +330,7 @@ export function mountApp(runtime: CrestronRuntime): void {
     });
   }
 
-  function openPowerConfirm(room: RoomId): void {
+  function requestShutdown(room: RoomId): void {
     pendingPower = room;
     const zone = zoneForRoom(partitions, room);
     const names = zone.rooms.map((id) => rooms[id].name).join(' + ');
@@ -309,12 +340,12 @@ export function mountApp(runtime: CrestronRuntime): void {
       zone.rooms.length > 1
         ? 'This combined space shares power. Displays and audio in every listed room will shut down.'
         : 'Displays and audio in this room will shut down.';
-    must('#power-confirm').hidden = false;
+    pulse(Joins.powerConfirm.initiate);
+    setConfirmVisible(true);
   }
 
-  function closePowerConfirm(): void {
-    pendingPower = undefined;
-    must('#power-confirm').hidden = true;
+  function setConfirmVisible(visible: boolean): void {
+    must('#power-confirm').hidden = !visible;
   }
 
   function openPartitions(): void {

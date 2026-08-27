@@ -10,6 +10,7 @@ Three rooms in a line: **A — B — C**. A cannot join C unless B is in the sam
 |---|---|---|
 | **Divisible Room Logic v1.0** | 1 | Shared walls, sources, volume. Fan FB to every XPanel. |
 | **Divisible Room Identity** | 1 per panel | Parameter `Panel_Role` (0 master, 1 A, 2 B, 3 C). Optional analog `Assign_Override`. |
+| **Power Shutdown Confirmation v1.0** | 1 per panel | [Crestron-Modules](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation). OFF overlay + countdown. Do not fan. |
 
 ## Panels
 
@@ -36,6 +37,22 @@ Same `.ch5z` on every panel. The UI uses IP-ID (or analog 10) for home room, and
 | Serial 1 / 2 / 3 | | Room_A_Name$ / B / C |
 
 Sensors (`Wall_AB_Sense` / `Wall_BC_Sense`) and Combine all / Divide all last-wins. Room UI shows only walls in that panel's zone. Combine all / divide all is master-only in CH5; wire those two joins from the master XPanel only if you want that in SIMPL too.
+
+### Power Shutdown Confirmation (per XPanel)
+
+Drop **Power Shutdown Confirmation v1.0** on each HTML5 XPanel (E1, E2, E3, master). Same join numbers on every panel; each instance talks only to that XPanel.
+
+| Join | Dir | Signal |
+|------|-----|--------|
+| Digital 14 | Panel → module | `Initiate` |
+| Digital 15 | Panel → module | `Cancel` |
+| Digital 16 | Panel → module | `Confirm` |
+| Digital 17 | Module → panel | `Warning_Page_FB` |
+| Digital 18 | Module → panel | `Shutdown_OS` |
+| Analog 11 | Module → panel | `Analog_Count_FB` |
+| Serial 4 | Module → panel | `Serial_Count_FB` |
+
+OFF pulses `Initiate`. The overlay follows `Warning_Page_FB` and shows `Serial_Count_FB`. Confirm / Cancel pulse those inputs. When `Shutdown_OS` goes high, the interface pulses that zone’s Power join on Logic. Do not also tie `Shutdown_OS` into `A_Power` / `B_Power` / `C_Power` or power will toggle twice.
 
 ### Room A / B / C
 
