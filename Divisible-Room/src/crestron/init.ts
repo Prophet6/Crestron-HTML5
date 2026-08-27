@@ -1,5 +1,6 @@
 import { getWebXPanel, runsInContainerApp } from '@crestron/ch5-webxpanel';
 import { authToken, ipId, processorHost } from '../config';
+import { ensureIncomingDigitalHook } from './bridge';
 import type { CrComLibApi } from './types';
 
 export type ConnectionState = 'native' | 'connecting' | 'online' | 'offline' | 'error';
@@ -20,6 +21,7 @@ function attachNativeBridges(): boolean {
   window.bridgeReceiveBooleanFromNative = api.bridgeReceiveBooleanFromNative;
   window.bridgeReceiveStringFromNative = api.bridgeReceiveStringFromNative;
   window.bridgeReceiveObjectFromNative = api.bridgeReceiveObjectFromNative;
+  ensureIncomingDigitalHook();
   return true;
 }
 

@@ -35,6 +35,8 @@ export interface CrComLibApi {
   publishEvent(type: JoinType | string, signalName: string, value: unknown): void;
   subscribeState(type: JoinType | string, signalName: string, callback: (value: never) => void): string;
   unsubscribeState(type: JoinType | string, signalName: string, subscriptionId: string): void;
+  getState?(type: JoinType | string, signalName: string, defaultValue?: unknown): unknown;
+  getBooleanSignalValue?(signalName: string, defaultValue?: boolean): boolean | null;
   bridgeReceiveIntegerFromNative?: (join: string, value: number) => void;
   bridgeReceiveBooleanFromNative?: (join: string, value: boolean) => void;
   bridgeReceiveStringFromNative?: (join: string, value: string) => void;

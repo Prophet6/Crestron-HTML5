@@ -1,11 +1,14 @@
 import {
   analogToPercent,
+  onIncomingDigital,
   percentToAnalog,
   pulse,
   publishAnalog,
+  readDigital,
   startRepeatDigital,
   subscribeAnalog,
   subscribeDigital,
+  subscribeDigitalName,
   subscribeSerial,
 } from '../crestron/bridge';
 import { Joins, RoomJoins, Source, type SourceId } from '../crestron/joins';
@@ -86,12 +89,19 @@ export function mountApp(runtime: CrestronRuntime): void {
   };
   let pendingPower: RoomId | undefined;
   let linked = false;
+  let processorOwnsConfirm = false;
+  let localCountTimer: number | undefined;
+  let localCountLeft = 0;
+  const localCountdownSeconds = 10;
   let masterMode = queryMaster || isMasterIpId(ipId);
   let homeRoom: RoomId = roomFromIpId(ipId) ?? 'A';
   let mountedKey = '';
   let holdStop: (() => void) | undefined;
   let holdTimer: number | undefined;
   let holdBtn: HTMLElement | undefined;
+  let wallPoll: number | undefined;
+  const wallAbNames = [Joins.wallAB.name, 'fb1'];
+  const wallBcNames = [Joins.wallBC.name, 'fb2'];
 
   function currentPanel() {
     return panelFromState(masterMode, homeRoom, ipId);
@@ -102,20 +112,83 @@ export function mountApp(runtime: CrestronRuntime): void {
   runtime.setConnectionHandler((state, detail) => {
     linked = state === 'online' || state === 'native';
     setConnection(must('#cip-dot'), must('#cip-label'), must('#cip-detail'), state, detail);
+    if (linked) {
+      syncWallsFromCip();
+      if (wallPoll === undefined) {
+        wallPoll = window.setInterval(syncWallsFromCip, 250);
+      }
+    } else if (wallPoll !== undefined) {
+      window.clearInterval(wallPoll);
+      wallPoll = undefined;
+    }
   });
 
-  subscribeDigital(Joins.wallAB, (value) => {
-    if (linked || !queryWalls) {
-      partitions.wallABOpen = asDigital(value);
+  function setWallFromCip(wall: WallId, open: boolean): void {
+    if (wall === 'AB' && partitions.wallABOpen !== open) {
+      partitions.wallABOpen = open;
+      render();
     }
-    render();
+    if (wall === 'BC' && partitions.wallBCOpen !== open) {
+      partitions.wallBCOpen = open;
+      render();
+    }
+  }
+
+  function readAnyDigital(names: string[]): boolean | undefined {
+    let sawFalse = false;
+    for (const name of names) {
+      const value = readDigital(name);
+      if (value === true) {
+        return true;
+      }
+      if (value === false) {
+        sawFalse = true;
+      }
+    }
+    return sawFalse ? false : undefined;
+  }
+
+  function syncWallsFromCip(): void {
+    const ab = readAnyDigital(wallAbNames);
+    const bc = readAnyDigital(wallBcNames);
+    if (ab !== undefined) {
+      setWallFromCip('AB', ab);
+    }
+    if (bc !== undefined) {
+      setWallFromCip('BC', bc);
+    }
+  }
+
+  function pullWallsSoon(): void {
+    window.setTimeout(syncWallsFromCip, 50);
+    window.setTimeout(syncWallsFromCip, 200);
+    window.setTimeout(syncWallsFromCip, 500);
+  }
+
+  function noteWallFeedback(name: string, open: boolean): void {
+    if (wallAbNames.includes(name)) {
+      setWallFromCip('AB', open);
+    }
+    if (wallBcNames.includes(name)) {
+      setWallFromCip('BC', open);
+    }
+  }
+
+  subscribeDigital(Joins.wallAB, (value) => {
+    if (!linked && queryWalls && !asDigital(value)) {
+      return;
+    }
+    setWallFromCip('AB', asDigital(value));
   });
   subscribeDigital(Joins.wallBC, (value) => {
-    if (linked || !queryWalls) {
-      partitions.wallBCOpen = asDigital(value);
+    if (!linked && queryWalls && !asDigital(value)) {
+      return;
     }
-    render();
+    setWallFromCip('BC', asDigital(value));
   });
+  subscribeDigitalName('fb1', (value) => setWallFromCip('AB', value));
+  subscribeDigitalName('fb2', (value) => setWallFromCip('BC', value));
+  onIncomingDigital(noteWallFeedback);
   subscribeDigital(Joins.masterMode, (value) => {
     masterMode = isMasterIpId(ipId) || (linked ? value : queryMaster || value);
     render();
@@ -170,6 +243,7 @@ export function mountApp(runtime: CrestronRuntime): void {
       partitions.wallBCOpen = true;
       render();
     }
+    pullWallsSoon();
   });
 
   must('[data-action="divide-all"]').addEventListener('click', () => {
@@ -182,6 +256,7 @@ export function mountApp(runtime: CrestronRuntime): void {
       partitions.wallBCOpen = false;
       render();
     }
+    pullWallsSoon();
   });
 
   must('#partition-page').addEventListener('click', (event) => {
@@ -206,6 +281,7 @@ export function mountApp(runtime: CrestronRuntime): void {
       }
       render();
     }
+    pullWallsSoon();
   });
 
   must('[data-action="open-partitions"]').addEventListener('click', openPartitions);
@@ -286,38 +362,53 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   must('[data-action="confirm-power"]').addEventListener('click', () => {
     pulse(Joins.powerConfirm.confirm);
-    if (!linked && pendingPower) {
-      const room = pendingPower;
-      pendingPower = undefined;
-      setZonePower(room, false);
-      setConfirmVisible(false);
+    if (!processorOwnsConfirm) {
+      completeLocalShutdown();
     }
   });
   must('[data-action="cancel-power"]').addEventListener('click', () => {
     pulse(Joins.powerConfirm.cancel);
-    if (!linked) {
-      pendingPower = undefined;
-      setConfirmVisible(false);
+    if (!processorOwnsConfirm) {
+      cancelLocalShutdown();
     }
   });
 
   subscribeDigital(Joins.powerConfirm.warningPage, (value) => {
-    setConfirmVisible(value);
+    if (asDigital(value)) {
+      processorOwnsConfirm = true;
+      stopLocalCountdown();
+      setConfirmVisible(true);
+    } else if (processorOwnsConfirm) {
+      processorOwnsConfirm = false;
+      stopLocalCountdown();
+      setConfirmVisible(false);
+      paintConfirmCount('');
+    }
   });
   subscribeDigital(Joins.powerConfirm.shutdown, (value) => {
-    if (value && pendingPower) {
+    if (asDigital(value) && pendingPower) {
       const room = pendingPower;
       pendingPower = undefined;
+      stopLocalCountdown();
       setZonePower(room, false);
     }
   });
   subscribeSerial(Joins.powerConfirm.countSerial, (value) => {
-    must('#power-confirm-count').textContent = value.trim();
+    const text = value.trim();
+    if (!text) {
+      return;
+    }
+    processorOwnsConfirm = true;
+    stopLocalCountdown();
+    paintConfirmCount(text);
   });
   subscribeAnalog(Joins.powerConfirm.countAnalog, (value) => {
+    if (!processorOwnsConfirm) {
+      return;
+    }
     const el = must('#power-confirm-count');
     if (!el.textContent.trim()) {
-      el.textContent = String(value);
+      paintConfirmCount(String(value));
     }
   });
 
@@ -388,6 +479,54 @@ export function mountApp(runtime: CrestronRuntime): void {
         : 'Displays and audio in this room will shut down.';
     pulse(Joins.powerConfirm.initiate);
     setConfirmVisible(true);
+    if (!processorOwnsConfirm) {
+      startLocalCountdown();
+    }
+  }
+
+  function startLocalCountdown(): void {
+    stopLocalCountdown();
+    localCountLeft = localCountdownSeconds;
+    paintConfirmCount(String(localCountLeft));
+    localCountTimer = window.setInterval(() => {
+      localCountLeft -= 1;
+      if (localCountLeft <= 0) {
+        completeLocalShutdown();
+        return;
+      }
+      paintConfirmCount(String(localCountLeft));
+    }, 1000);
+  }
+
+  function stopLocalCountdown(): void {
+    if (localCountTimer !== undefined) {
+      window.clearInterval(localCountTimer);
+      localCountTimer = undefined;
+    }
+  }
+
+  function completeLocalShutdown(): void {
+    stopLocalCountdown();
+    processorOwnsConfirm = false;
+    const room = pendingPower;
+    pendingPower = undefined;
+    paintConfirmCount('');
+    setConfirmVisible(false);
+    if (room) {
+      setZonePower(room, false);
+    }
+  }
+
+  function cancelLocalShutdown(): void {
+    stopLocalCountdown();
+    processorOwnsConfirm = false;
+    pendingPower = undefined;
+    paintConfirmCount('');
+    setConfirmVisible(false);
+  }
+
+  function paintConfirmCount(text: string): void {
+    must('#power-confirm-count').textContent = text;
   }
 
   function setConfirmVisible(visible: boolean): void {
