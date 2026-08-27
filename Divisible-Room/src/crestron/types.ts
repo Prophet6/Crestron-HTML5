@@ -50,6 +50,8 @@ declare global {
     bridgeReceiveBooleanFromNative?: CrComLibApi['bridgeReceiveBooleanFromNative'];
     bridgeReceiveStringFromNative?: CrComLibApi['bridgeReceiveStringFromNative'];
     bridgeReceiveObjectFromNative?: CrComLibApi['bridgeReceiveObjectFromNative'];
+    __ch5OnDigital?: (name: string, value: boolean) => void;
+    __ch5DigitalLog?: Array<{ name: string; value: boolean }>;
   }
 }
 

@@ -10,6 +10,29 @@
     <meta name="theme-color" content="#0b0f14" />
     <title>Divisible-Room</title>
     <script src="./cr-com-lib.js"></script>
+    <script>
+      (function () {
+        var api = window.CrComLib;
+        if (!api || !api.bridgeReceiveBooleanFromNative) {
+          return;
+        }
+        var orig = api.bridgeReceiveBooleanFromNative.bind(api);
+        window.__ch5DigitalLog = [];
+        function wrap(name, value) {
+          orig(name, value);
+          var rec = { name: String(name), value: !!value };
+          window.__ch5DigitalLog.push(rec);
+          if (window.__ch5DigitalLog.length > 40) {
+            window.__ch5DigitalLog.shift();
+          }
+          if (typeof window.__ch5OnDigital === 'function') {
+            window.__ch5OnDigital(rec.name, rec.value);
+          }
+        }
+        api.bridgeReceiveBooleanFromNative = wrap;
+        window.bridgeReceiveBooleanFromNative = wrap;
+      })();
+    </script>
   </head>
   <body>
     <div id="app" class="shell">

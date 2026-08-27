@@ -4,16 +4,15 @@ import {
   percentToAnalog,
   pulse,
   publishAnalog,
-  readDigital,
   startRepeatDigital,
   subscribeAnalog,
   subscribeDigital,
-  subscribeDigitalName,
   subscribeSerial,
 } from '../crestron/bridge';
 import { Joins, RoomJoins, Source, type SourceId } from '../crestron/joins';
 import type { ConnectionState, CrestronRuntime } from '../crestron/init';
 import {
+  debugEnabled,
   ipId,
   isMasterIpId,
   panelFromState,
@@ -99,7 +98,6 @@ export function mountApp(runtime: CrestronRuntime): void {
   let holdStop: (() => void) | undefined;
   let holdTimer: number | undefined;
   let holdBtn: HTMLElement | undefined;
-  let wallPoll: number | undefined;
   const wallAbNames = [Joins.wallAB.name, 'fb1'];
   const wallBcNames = [Joins.wallBC.name, 'fb2'];
 
@@ -112,15 +110,6 @@ export function mountApp(runtime: CrestronRuntime): void {
   runtime.setConnectionHandler((state, detail) => {
     linked = state === 'online' || state === 'native';
     setConnection(must('#cip-dot'), must('#cip-label'), must('#cip-detail'), state, detail);
-    if (linked) {
-      syncWallsFromCip();
-      if (wallPoll === undefined) {
-        wallPoll = window.setInterval(syncWallsFromCip, 250);
-      }
-    } else if (wallPoll !== undefined) {
-      window.clearInterval(wallPoll);
-      wallPoll = undefined;
-    }
   });
 
   function setWallFromCip(wall: WallId, open: boolean): void {
@@ -134,43 +123,24 @@ export function mountApp(runtime: CrestronRuntime): void {
     }
   }
 
-  function readAnyDigital(names: string[]): boolean | undefined {
-    let sawFalse = false;
-    for (const name of names) {
-      const value = readDigital(name);
-      if (value === true) {
-        return true;
-      }
-      if (value === false) {
-        sawFalse = true;
-      }
+  function wallFromIncomingName(name: string): WallId | undefined {
+    const n = name.toLowerCase();
+    if (n.includes('abopen') || n === 'fb1' || wallAbNames.includes(name)) {
+      return 'AB';
     }
-    return sawFalse ? false : undefined;
-  }
-
-  function syncWallsFromCip(): void {
-    const ab = readAnyDigital(wallAbNames);
-    const bc = readAnyDigital(wallBcNames);
-    if (ab !== undefined) {
-      setWallFromCip('AB', ab);
+    if (n.includes('bcopen') || n === 'fb2' || wallBcNames.includes(name)) {
+      return 'BC';
     }
-    if (bc !== undefined) {
-      setWallFromCip('BC', bc);
-    }
-  }
-
-  function pullWallsSoon(): void {
-    window.setTimeout(syncWallsFromCip, 50);
-    window.setTimeout(syncWallsFromCip, 200);
-    window.setTimeout(syncWallsFromCip, 500);
+    return undefined;
   }
 
   function noteWallFeedback(name: string, open: boolean): void {
-    if (wallAbNames.includes(name)) {
-      setWallFromCip('AB', open);
+    if (debugEnabled) {
+      must('#cip-detail').textContent = `rx ${name}=${open ? '1' : '0'}`;
     }
-    if (wallBcNames.includes(name)) {
-      setWallFromCip('BC', open);
+    const wall = wallFromIncomingName(name);
+    if (wall) {
+      setWallFromCip(wall, open);
     }
   }
 
@@ -186,9 +156,11 @@ export function mountApp(runtime: CrestronRuntime): void {
     }
     setWallFromCip('BC', asDigital(value));
   });
-  subscribeDigitalName('fb1', (value) => setWallFromCip('AB', value));
-  subscribeDigitalName('fb2', (value) => setWallFromCip('BC', value));
   onIncomingDigital(noteWallFeedback);
+  window.__ch5OnDigital = noteWallFeedback;
+  for (const rec of window.__ch5DigitalLog ?? []) {
+    noteWallFeedback(rec.name, rec.value);
+  }
   subscribeDigital(Joins.masterMode, (value) => {
     masterMode = isMasterIpId(ipId) || (linked ? value : queryMaster || value);
     render();
@@ -238,12 +210,9 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     pulse(Joins.combineAll);
-    if (!linked) {
-      partitions.wallABOpen = true;
-      partitions.wallBCOpen = true;
-      render();
-    }
-    pullWallsSoon();
+    partitions.wallABOpen = true;
+    partitions.wallBCOpen = true;
+    render();
   });
 
   must('[data-action="divide-all"]').addEventListener('click', () => {
@@ -251,12 +220,9 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     pulse(Joins.divideAll);
-    if (!linked) {
-      partitions.wallABOpen = false;
-      partitions.wallBCOpen = false;
-      render();
-    }
-    pullWallsSoon();
+    partitions.wallABOpen = false;
+    partitions.wallBCOpen = false;
+    render();
   });
 
   must('#partition-page').addEventListener('click', (event) => {
@@ -273,15 +239,12 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     pulse(wall === 'AB' ? Joins.wallABToggle : Joins.wallBCToggle);
-    if (!linked) {
-      if (wall === 'AB') {
-        partitions.wallABOpen = !partitions.wallABOpen;
-      } else {
-        partitions.wallBCOpen = !partitions.wallBCOpen;
-      }
-      render();
+    if (wall === 'AB') {
+      partitions.wallABOpen = !partitions.wallABOpen;
+    } else {
+      partitions.wallBCOpen = !partitions.wallBCOpen;
     }
-    pullWallsSoon();
+    render();
   });
 
   must('[data-action="open-partitions"]').addEventListener('click', openPartitions);
