@@ -1,4 +1,4 @@
-# Contract map — Divisible-Room-Contracts
+# Contract map — Divisible-Room
 
 CH5 `publishEvent` / `subscribeState` names. CHD extender **Input** = program → panel. **Output** = panel → program.
 

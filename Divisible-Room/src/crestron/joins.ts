@@ -1,73 +1,75 @@
 import type { AnalogJoin, DigitalJoin, SerialJoin } from './types';
 
+function b(name: string): DigitalJoin {
+  return { type: 'b', name };
+}
+
+function n(name: string): AnalogJoin {
+  return { type: 'n', name };
+}
+
+function s(name: string): SerialJoin {
+  return { type: 's', name };
+}
+
 /**
- * 3-way divisible room. Walls are neighbors only: A–B and B–C.
- * There is no A–C wall. Combining A+C without B is not a legal state.
+ * Name-based CH5 contract (DivisibleRoom). Signal names match
+ * contracts/divisible-room.cse2j. Numbered joins are not used.
  */
 export const Joins = {
-  /** Held FB. 1 = air wall open / rooms combined. Matches core outputs 1–2. */
-  wallAB: { type: 'b', name: '1' } satisfies DigitalJoin,
-  wallBC: { type: 'b', name: '2' } satisfies DigitalJoin,
-  /** Master panel only in the UI. Optional: wire only the master XPanel in SIMPL. */
-  combineAll: { type: 'b', name: '7' } satisfies DigitalJoin,
-  divideAll: { type: 'b', name: '8' } satisfies DigitalJoin,
-  /** Held FB from that panel's Divisible Room Identity instance. */
-  masterMode: { type: 'b', name: '13' } satisfies DigitalJoin,
-  /** 0 = master, 1 = A, 2 = B, 3 = C */
-  roomAssign: { type: 'n', name: '10' } satisfies AnalogJoin,
-
-  nameA: { type: 's', name: '1' } satisfies SerialJoin,
-  nameB: { type: 's', name: '2' } satisfies SerialJoin,
-  nameC: { type: 's', name: '3' } satisfies SerialJoin,
-
-  /**
-   * Power Shutdown Confirmation v1.0 — one instance per XPanel, not fanned.
-   * https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation
-   */
+  wallAB: b('Walls.ABOpen'),
+  wallBC: b('Walls.BCOpen'),
+  combineAll: b('Walls.CombineAll'),
+  divideAll: b('Walls.DivideAll'),
+  masterMode: b('Identity.MasterMode'),
+  roomAssign: n('Identity.RoomAssign'),
+  nameA: s('RoomA.Name'),
+  nameB: s('RoomB.Name'),
+  nameC: s('RoomC.Name'),
   powerConfirm: {
-    initiate: { type: 'b', name: '14' } satisfies DigitalJoin,
-    cancel: { type: 'b', name: '15' } satisfies DigitalJoin,
-    confirm: { type: 'b', name: '16' } satisfies DigitalJoin,
-    warningPage: { type: 'b', name: '17' } satisfies DigitalJoin,
-    shutdown: { type: 'b', name: '18' } satisfies DigitalJoin,
-    countSerial: { type: 's', name: '4' } satisfies SerialJoin,
-    countAnalog: { type: 'n', name: '11' } satisfies AnalogJoin,
+    initiate: b('PowerConfirm.Initiate'),
+    cancel: b('PowerConfirm.Cancel'),
+    confirm: b('PowerConfirm.Confirm'),
+    warningPage: b('PowerConfirm.WarningPage'),
+    shutdown: b('PowerConfirm.Shutdown'),
+    countSerial: s('PowerConfirm.CountText'),
+    countAnalog: n('PowerConfirm.Count'),
   },
 } as const;
 
 export const RoomJoins = {
   A: {
-    source: { type: 'n', name: '21' } satisfies AnalogJoin,
-    volume: { type: 'n', name: '22' } satisfies AnalogJoin,
-    power: { type: 'b', name: '21' } satisfies DigitalJoin,
-    mute: { type: 'b', name: '22' } satisfies DigitalJoin,
-    volUp: { type: 'b', name: '23' } satisfies DigitalJoin,
-    volDown: { type: 'b', name: '24' } satisfies DigitalJoin,
-    laptop: { type: 'b', name: '25' } satisfies DigitalJoin,
-    appleTv: { type: 'b', name: '26' } satisfies DigitalJoin,
-    hdmi: { type: 'b', name: '27' } satisfies DigitalJoin,
+    source: n('RoomA.Source'),
+    volume: n('RoomA.Volume'),
+    power: b('RoomA.Power'),
+    mute: b('RoomA.Mute'),
+    volUp: b('RoomA.VolUp'),
+    volDown: b('RoomA.VolDown'),
+    laptop: b('RoomA.Laptop'),
+    appleTv: b('RoomA.AppleTv'),
+    hdmi: b('RoomA.Hdmi'),
   },
   B: {
-    source: { type: 'n', name: '31' } satisfies AnalogJoin,
-    volume: { type: 'n', name: '32' } satisfies AnalogJoin,
-    power: { type: 'b', name: '31' } satisfies DigitalJoin,
-    mute: { type: 'b', name: '32' } satisfies DigitalJoin,
-    volUp: { type: 'b', name: '33' } satisfies DigitalJoin,
-    volDown: { type: 'b', name: '34' } satisfies DigitalJoin,
-    laptop: { type: 'b', name: '35' } satisfies DigitalJoin,
-    appleTv: { type: 'b', name: '36' } satisfies DigitalJoin,
-    hdmi: { type: 'b', name: '37' } satisfies DigitalJoin,
+    source: n('RoomB.Source'),
+    volume: n('RoomB.Volume'),
+    power: b('RoomB.Power'),
+    mute: b('RoomB.Mute'),
+    volUp: b('RoomB.VolUp'),
+    volDown: b('RoomB.VolDown'),
+    laptop: b('RoomB.Laptop'),
+    appleTv: b('RoomB.AppleTv'),
+    hdmi: b('RoomB.Hdmi'),
   },
   C: {
-    source: { type: 'n', name: '41' } satisfies AnalogJoin,
-    volume: { type: 'n', name: '42' } satisfies AnalogJoin,
-    power: { type: 'b', name: '41' } satisfies DigitalJoin,
-    mute: { type: 'b', name: '42' } satisfies DigitalJoin,
-    volUp: { type: 'b', name: '43' } satisfies DigitalJoin,
-    volDown: { type: 'b', name: '44' } satisfies DigitalJoin,
-    laptop: { type: 'b', name: '45' } satisfies DigitalJoin,
-    appleTv: { type: 'b', name: '46' } satisfies DigitalJoin,
-    hdmi: { type: 'b', name: '47' } satisfies DigitalJoin,
+    source: n('RoomC.Source'),
+    volume: n('RoomC.Volume'),
+    power: b('RoomC.Power'),
+    mute: b('RoomC.Mute'),
+    volUp: b('RoomC.VolUp'),
+    volDown: b('RoomC.VolDown'),
+    laptop: b('RoomC.Laptop'),
+    appleTv: b('RoomC.AppleTv'),
+    hdmi: b('RoomC.Hdmi'),
   },
 } as const;
 

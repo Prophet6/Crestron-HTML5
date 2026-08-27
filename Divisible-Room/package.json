@@ -10,10 +10,11 @@
     "npm": ">=11.4.0"
   },
   "scripts": {
+    "generate:contract": "node scripts/generate-contract.mjs",
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run generate:contract && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "archive": "ch5-cli archive -p divisible-room -d dist -o archive",
+    "archive": "ch5-cli archive -p divisible-room -d dist -o archive -c contracts/divisible-room.cse2j",
     "build:ch5z": "npm run build && npm run archive",
     "deploy:xpanel": "node scripts/deploy.mjs xpanel",
     "deploy:panel": "node scripts/deploy.mjs panel"

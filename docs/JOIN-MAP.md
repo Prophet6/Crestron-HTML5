@@ -10,9 +10,13 @@ Join numbers are **HTML5 XPanel / TST** joins used by CrComLib (`publishEvent` /
 
 ---
 
-Name-based contract fork (no numbered joins): [Divisible-Room-Contracts](../Divisible-Room-Contracts/docs/CONTRACT-MAP.md).
-
 ## Divisible-Room
+
+Divisible-Room uses **name-based contracts**, not numbered joins. Map: [`Divisible-Room/docs/CONTRACT-MAP.md`](../Divisible-Room/docs/CONTRACT-MAP.md). CHD: [`Divisible-Room/contracts/divisible-room.chd`](../Divisible-Room/contracts/divisible-room.chd).
+
+Numbered-join tables below are **obsolete** for this project (kept only as history of the pre-contract lab). Do not wire them on the current XPanels.
+
+### Divisible-Room (legacy numbered joins)
 
 Source of truth for module pins: [`Divisible-Room/simpl/Divisible Room Logic v1.0.usp`](../Divisible-Room/simpl/Divisible%20Room%20Logic%20v1.0.usp)  
 CH5 names: [`Divisible-Room/src/crestron/joins.ts`](../Divisible-Room/src/crestron/joins.ts)

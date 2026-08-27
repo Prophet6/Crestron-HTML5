@@ -11,6 +11,11 @@ export default defineConfig({
           dest: '.',
           rename: { stripBase: true },
         },
+        {
+          src: 'contracts/divisible-room.cse2j',
+          dest: 'config',
+          rename: 'contract.cse2j',
+        },
       ],
     }),
   ],
@@ -18,6 +23,7 @@ export default defineConfig({
     host: true,
     port: 5174,
   },
+  publicDir: 'public',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

@@ -1,9 +1,9 @@
 {
 	"name": "DivisibleRoom",
-	"timestamp": "2026-08-27 20:28:41.240",
+	"timestamp": "2026-08-27 20:38:17.662",
 	"version": "1.0.0.0",
 	"schema_version": 1,
-	"extra_value": "Divisible-Room name-based contract (fork of join-based Divisible-Room)",
+	"extra_value": "Divisible-Room name-based CH5 contract",
 	"signals": {
 		"states": {
 			"boolean": {

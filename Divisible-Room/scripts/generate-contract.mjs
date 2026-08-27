@@ -139,7 +139,7 @@ function buildCse2j() {
     timestamp,
     version: '1.0.0.0',
     schema_version: 1,
-    extra_value: 'Divisible-Room name-based contract (fork of join-based Divisible-Room)',
+    extra_value: 'Divisible-Room name-based CH5 contract',
     signals: { states, events },
   };
 }
