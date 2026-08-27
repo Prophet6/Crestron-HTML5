@@ -25,6 +25,7 @@ import {
   masterRoom,
   summarize,
   canToggleWall,
+  wallCloseFirstHint,
   visibleWalls,
   visibleZones,
   zoneForRoom,
@@ -474,12 +475,14 @@ export function mountApp(runtime: CrestronRuntime): void {
     must('#master-actions').classList.toggle('is-hidden', !masterUi);
     must('#dock-rule').textContent = masterUi
       ? 'Last sensor change, wall toggle, or Combine all / Divide all wins. A cannot join C unless B is in the same space.'
-      : partitions.wallABOpen && partitions.wallBCOpen && homeRoom !== 'B'
+      : partitions.wallABOpen && partitions.wallBCOpen && panel === 'A'
         ? 'When all three are combined, close B|C before A|B so B+C are not left combined.'
-        : 'Toggle any wall touching this space. Combine all / Divide all is master-only.';
+        : partitions.wallABOpen && partitions.wallBCOpen && panel === 'C'
+          ? 'When all three are combined, close A|B before B|C so A+B are not left combined.'
+          : 'Toggle any wall touching this space. Combine all / Divide all is master-only.';
 
-    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'), canToggleWall(partitions, panel, 'AB'));
-    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'), canToggleWall(partitions, panel, 'BC'));
+    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'), canToggleWall(partitions, panel, 'AB'), wallCloseFirstHint(panel, 'AB'));
+    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'), canToggleWall(partitions, panel, 'BC'), wallCloseFirstHint(panel, 'BC'));
 
     if (key !== mountedKey) {
       mountZoneCards(zones);
@@ -496,7 +499,7 @@ export function mountApp(runtime: CrestronRuntime): void {
   }
 }
 
-function paintWall(wall: WallId, open: boolean, visible: boolean, enabled: boolean): void {
+function paintWall(wall: WallId, open: boolean, visible: boolean, enabled: boolean, closeHint: string): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
   el.classList.toggle('is-hidden', !visible);
@@ -505,7 +508,7 @@ function paintWall(wall: WallId, open: boolean, visible: boolean, enabled: boole
   if (btn) {
     btn.textContent = open ? 'Divide' : 'Combine';
     btn.disabled = !enabled;
-    btn.title = enabled || !open ? '' : 'Close B | C first';
+    btn.title = enabled || !open ? '' : closeHint;
   }
 }
 

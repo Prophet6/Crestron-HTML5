@@ -116,9 +116,9 @@ export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
 
 /**
  * A room must not orphan a combined pair it is leaving.
- * If A+B+C, closing A|B leaves B+C combined — Room A must close B|C first,
- * and Room C must not close A|B before B|C. Master and Room B may close either.
- * Opening a visible wall is always allowed.
+ * A+B+C: Room A must close B|C before A|B (else B+C stay combined).
+ * Room C must close A|B before B|C (else A+B stay combined).
+ * Master and Room B may close either. Opening a visible wall is always allowed.
  */
 export function canToggleWall(state: PartitionState, panel: PanelId, wall: WallId): boolean {
   if (!visibleWalls(state, panel).includes(wall)) {
@@ -127,9 +127,21 @@ export function canToggleWall(state: PartitionState, panel: PanelId, wall: WallI
   if (panel === 'master' || panel === 'B') {
     return true;
   }
-  const closingAb = wall === 'AB' && state.wallABOpen;
-  if (closingAb && state.wallBCOpen && (panel === 'A' || panel === 'C')) {
+  if (panel === 'A' && wall === 'AB' && state.wallABOpen && state.wallBCOpen) {
+    return false;
+  }
+  if (panel === 'C' && wall === 'BC' && state.wallBCOpen && state.wallABOpen) {
     return false;
   }
   return true;
+}
+
+export function wallCloseFirstHint(panel: PanelId, wall: WallId): string {
+  if (panel === 'C' && wall === 'BC') {
+    return 'Close A | B first';
+  }
+  if (panel === 'A' && wall === 'AB') {
+    return 'Close B | C first';
+  }
+  return '';
 }

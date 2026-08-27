@@ -22,7 +22,7 @@ Wire Walls extender outputs `CombineAll` / `DivideAll` / `ABToggle` / `BCToggle`
 
 Room panels (E1–E3, `Master_Mode` off) get Combine / Divide on each wall in their zone only — never Combine all / Divide all. IP-ID **C1** and any panel with `Master_Mode` high get both wall toggles plus Combine all / Divide all.
 
-When A+B+C, Room A and Room C cannot close A|B while B|C is open (would leave B+C combined). They must close B|C first. Master and Room B may close either wall. This is enforced in the UI (Logic S+ does not know which panel pressed the shared toggle).
+When A+B+C, Room A must close B|C before A|B (else B+C stay combined). Room C must close A|B before B|C (else A+B stay combined). Master and Room B may close either wall. Enforced in the UI (Logic S+ does not know which panel pressed the shared toggle).
 
 Wire Shutdown `Initiate`/`Cancel`/`Confirm` from PowerConfirm extender outputs; `Warning_Page_FB` / `Shutdown_OS` / counts to extender inputs.
 

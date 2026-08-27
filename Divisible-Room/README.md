@@ -29,7 +29,7 @@ Same stack: vanilla TypeScript, Vite, CrComLib. One `.ch5z` on every panel. Room
 | Room C | E3 | 3 | C's zone. Partitions: walls this room can see. No Combine all / Divide all unless `Master_Mode` is high |
 | Master | **C1** | 0 (or `Master_Mode` high on a room panel) | One column per zone. Both wall toggles + Combine all / Divide all |
 
-Each zone is two cards: **OFF + sources** and **volume + mute**. **Partitions** is on the header. Each visible wall has a Combine / Divide toggle (`Wall_AB_Toggle` / `Wall_BC_Toggle`) on every panel that can see that wall. Room A and Room C cannot close A\|B while B\|C is still open (that would leave B+C combined). Combine all / divide all (`Wall_Combine_All` / `Wall_Divide_All`) is shown only when that panel’s `Master_Mode` is high. Power-off uses [Power Shutdown Confirmation v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (one instance per panel).
+Each zone is two cards: **OFF + sources** and **volume + mute**. **Partitions** is on the header. Each visible wall has a Combine / Divide toggle (`Wall_AB_Toggle` / `Wall_BC_Toggle`) on every panel that can see that wall. When A+B+C, Room A must close B\|C before A\|B; Room C must close A\|B before B\|C. Combine all / divide all (`Wall_Combine_All` / `Wall_Divide_All`) is shown only when that panel’s `Master_Mode` is high. Power-off uses [Power Shutdown Confirmation v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (one instance per panel).
 
 ## Contract artifacts
 
