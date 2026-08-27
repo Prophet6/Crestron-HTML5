@@ -106,13 +106,13 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   subscribeDigital(Joins.wallAB, (value) => {
     if (linked || !queryWalls) {
-      partitions.wallABOpen = value;
+      partitions.wallABOpen = asDigital(value);
     }
     render();
   });
   subscribeDigital(Joins.wallBC, (value) => {
     if (linked || !queryWalls) {
-      partitions.wallBCOpen = value;
+      partitions.wallBCOpen = asDigital(value);
     }
     render();
   });
@@ -164,25 +164,29 @@ export function mountApp(runtime: CrestronRuntime): void {
     if (currentPanel() !== 'master') {
       return;
     }
-    partitions.wallABOpen = true;
-    partitions.wallBCOpen = true;
     pulse(Joins.combineAll);
-    render();
+    if (!linked) {
+      partitions.wallABOpen = true;
+      partitions.wallBCOpen = true;
+      render();
+    }
   });
 
   must('[data-action="divide-all"]').addEventListener('click', () => {
     if (currentPanel() !== 'master') {
       return;
     }
-    partitions.wallABOpen = false;
-    partitions.wallBCOpen = false;
     pulse(Joins.divideAll);
-    render();
+    if (!linked) {
+      partitions.wallABOpen = false;
+      partitions.wallBCOpen = false;
+      render();
+    }
   });
 
   must('#partition-page').addEventListener('click', (event) => {
-    const btn = (event.target as HTMLElement).closest<HTMLElement>('[data-wall-toggle]');
-    if (!btn) {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-wall-toggle]');
+    if (!btn || btn.disabled) {
       return;
     }
     const wall = btn.dataset.wallToggle;
@@ -193,14 +197,15 @@ export function mountApp(runtime: CrestronRuntime): void {
     if (!canToggleWall(partitions, panel, wall)) {
       return;
     }
-    if (wall === 'AB') {
-      partitions.wallABOpen = !partitions.wallABOpen;
-      pulse(Joins.wallABToggle);
-    } else {
-      partitions.wallBCOpen = !partitions.wallBCOpen;
-      pulse(Joins.wallBCToggle);
+    pulse(wall === 'AB' ? Joins.wallABToggle : Joins.wallBCToggle);
+    if (!linked) {
+      if (wall === 'AB') {
+        partitions.wallABOpen = !partitions.wallABOpen;
+      } else {
+        partitions.wallBCOpen = !partitions.wallBCOpen;
+      }
+      render();
     }
-    render();
   });
 
   must('[data-action="open-partitions"]').addEventListener('click', openPartitions);
@@ -481,8 +486,22 @@ export function mountApp(runtime: CrestronRuntime): void {
           ? 'When all three are combined, close A|B before B|C so A+B are not left combined.'
           : 'Toggle any wall touching this space. Combine all / Divide all is master-only.';
 
-    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'), canToggleWall(partitions, panel, 'AB'), wallCloseFirstHint(panel, 'AB'));
-    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'), canToggleWall(partitions, panel, 'BC'), wallCloseFirstHint(panel, 'BC'));
+    paintHeaderWall('AB', partitions.wallABOpen);
+    paintHeaderWall('BC', partitions.wallBCOpen);
+    paintWall(
+      'AB',
+      partitions.wallABOpen,
+      shownWalls.has('AB'),
+      canToggleWall(partitions, panel, 'AB'),
+      wallCloseFirstHint(panel, 'AB'),
+    );
+    paintWall(
+      'BC',
+      partitions.wallBCOpen,
+      shownWalls.has('BC'),
+      canToggleWall(partitions, panel, 'BC'),
+      wallCloseFirstHint(panel, 'BC'),
+    );
 
     if (key !== mountedKey) {
       mountZoneCards(zones);
@@ -499,17 +518,34 @@ export function mountApp(runtime: CrestronRuntime): void {
   }
 }
 
-function paintWall(wall: WallId, open: boolean, visible: boolean, enabled: boolean, closeHint: string): void {
+function paintHeaderWall(wall: WallId, open: boolean): void {
+  const el = must(`[data-header-wall="${wall}"]`);
+  el.classList.toggle('is-open', open);
+  must(`[data-header-wall-state="${wall}"]`).textContent = open ? 'Open' : 'Closed';
+}
+
+function paintWall(wall: WallId, open: boolean, controllable: boolean, enabled: boolean, closeHint: string): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
-  el.classList.toggle('is-hidden', !visible);
-  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Combined (open)' : 'Divided (wall present)';
+  el.classList.remove('is-hidden');
+  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Combined (open)' : 'Divided (closed)';
   const btn = el.querySelector<HTMLButtonElement>('[data-wall-toggle]');
   if (btn) {
+    btn.hidden = !controllable;
     btn.textContent = open ? 'Divide' : 'Combine';
     btn.disabled = !enabled;
     btn.title = enabled || !open ? '' : closeHint;
   }
+}
+
+function asDigital(value: unknown): boolean {
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  if (typeof value === 'string') {
+    return value !== '0' && value !== '' && value.toLowerCase() !== 'false';
+  }
+  return Boolean(value);
 }
 
 function roomFrom(el: HTMLElement): RoomId {

@@ -18,7 +18,7 @@ The HTML5 XPanel uses the **GUI extender** from [`contracts/divisible-room.chd`]
 
 Wire Identity `Master_Mode_FB` → extender Identity `MasterMode`, `Room_Assign` → `RoomAssign`.
 
-Wire Walls extender outputs `CombineAll` / `DivideAll` / `ABToggle` / `BCToggle` to Logic `Wall_Combine_All` / `Wall_Divide_All` / `Wall_AB_Toggle` / `Wall_BC_Toggle`. Fan Logic `Wall_AB_Open_FB` / `Wall_BC_Open_FB` to every XPanel Walls input.
+Wire Walls extender outputs `CombineAll` / `DivideAll` / `ABToggle` / `BCToggle` to Logic `Wall_Combine_All` / `Wall_Divide_All` / `Wall_AB_Toggle` / `Wall_BC_Toggle`. **Fan** Logic `Wall_AB_Open_FB` / `Wall_BC_Open_FB` to **every** XPanel Walls `ABOpen` / `BCOpen` input. Those FBs are the global wall state (and later motor drive). Toggles invert FB; the UI does not keep a local wall state while CIP is online.
 
 Room panels (E1–E3, `Master_Mode` off) get Combine / Divide on each wall in their zone only — never Combine all / Divide all. IP-ID **C1** and any panel with `Master_Mode` high get both wall toggles plus Combine all / Divide all.
 

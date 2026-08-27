@@ -8,8 +8,8 @@ Rebuild with `npm run generate:contract`.
 
 | CH5 name | Type | CHD | Logic S+ |
 |----------|------|-----|----------|
-| `Walls.ABOpen` | digital state | Input `ABOpen` | `Wall_AB_Open_FB` |
-| `Walls.BCOpen` | digital state | Input `BCOpen` | `Wall_BC_Open_FB` |
+| `Walls.ABOpen` | digital state | Input `ABOpen` | `Wall_AB_Open_FB` (global truth — fan to every XPanel) |
+| `Walls.BCOpen` | digital state | Input `BCOpen` | `Wall_BC_Open_FB` (global truth — fan to every XPanel) |
 | `Walls.CombineAll` | digital event | Output `CombineAll` | `Wall_Combine_All` |
 | `Walls.DivideAll` | digital event | Output `DivideAll` | `Wall_Divide_All` |
 | `Walls.ABToggle` | digital event | Output `ABToggle` | `Wall_AB_Toggle` |

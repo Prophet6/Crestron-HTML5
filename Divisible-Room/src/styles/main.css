@@ -76,7 +76,52 @@ input {
 .header__title-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.header__walls {
+  display: flex;
+  gap: 8px;
+}
+
+.header-wall {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 92px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    #1a222c,
+    #1a222c 8px,
+    #10151b 8px,
+    #10151b 11px
+  );
+}
+
+.header-wall.is-open {
+  background: rgba(62, 207, 142, 0.12);
+  border-style: dashed;
+  border-color: rgba(62, 207, 142, 0.45);
+}
+
+.header-wall__name,
+.header-wall__state {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.header-wall__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.header-wall__state {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .header__partition {
