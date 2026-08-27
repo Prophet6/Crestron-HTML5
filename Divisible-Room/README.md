@@ -18,14 +18,18 @@ Each room may combine only with a **neighbor**. A never joins C unless B is in t
 | both open | A+B+C |
 | A+C only | **illegal — no control for this** |
 
-Same stack as Hello-World: vanilla TypeScript, Vite, CrComLib. One `.ch5z` on every panel. Room identity comes from **IP-ID**; **Master Mode** comes from that panel’s identity S+ module (digital 13).
+Same stack as Hello-World: vanilla TypeScript, Vite, CrComLib. One `.ch5z` on every panel. Room identity comes from **IP-ID** and that panel’s **Divisible Room Identity** instance (`Panel_Role` parameter, analog 10, digital 13).
 
-| Panel | IP-ID | Identity S+ | What it shows |
-|-------|-------|-------------|---------------|
-| Room A | E1 | Divisible Room A | Zone containing A |
-| Room B | E2 | Divisible Room B | Zone containing B |
-| Room C | E3 | Divisible Room C | Zone containing C |
-| Master | any (tie Master_Mode high, or use Master S+) | Divisible Room Master | A, B, and C always |
+| Panel | IP-ID | Identity `Panel_Role` | What it shows |
+|-------|-------|----------------------|---------------|
+| Room A | E1 | 1 | A's zone, full screen. Partitions: A/B wall (B/C after joining B) |
+| Room B | E2 | 2 | B's zone, full screen. Partitions: both walls |
+| Room C | E3 | 3 | C's zone, full screen. Partitions: B/C wall (A/B after joining B) |
+| Master | any | 0 (or drive `Master_Mode` high on a room instance) | One column per zone. Partitions: both walls + combine/divide all |
+
+Each zone is two cards: **OFF + sources** (with a filling idle/source page) and **volume + mute**. **Partitions** lives on the header next to the combined-room text. Room panels only see walls in their zone. Combine all / divide all is master-only.
+
+When rooms are combined, source / power / mute / volume from **any** room in that zone drives the whole zone. Divided rooms stay independent. Satellites never show other zones.
 
 Shared walls/AV: one **Divisible Room Logic v1.0**. Vite preview without a processor: `?ipId=E1` (Room A) or `?master=1` (master layout).
 
@@ -51,4 +55,4 @@ https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
 
 Join map (complete): [`docs/JOIN-MAP.md`](../docs/JOIN-MAP.md). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Modules: [`simpl/`](simpl/).
 
-Volume has a slider plus up/down (hold to repeat). Power-off asks for confirmation; power-on does not. Selected sources open a placeholder page for later device info/controls.
+Volume has a slider plus up/down (hold to repeat) and mute, on their own card. Power sits with the source buttons; power-off asks for confirmation, power-on does not. The idle/source page fills the rest of the source card.

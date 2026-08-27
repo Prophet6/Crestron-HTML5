@@ -8,13 +8,10 @@ export const Joins = {
   /** Held FB. 1 = air wall open / rooms combined. Matches core outputs 1–2. */
   wallAB: { type: 'b', name: '1' } satisfies DigitalJoin,
   wallBC: { type: 'b', name: '2' } satisfies DigitalJoin,
-  combineAB: { type: 'b', name: '3' } satisfies DigitalJoin,
-  divideAB: { type: 'b', name: '4' } satisfies DigitalJoin,
-  combineBC: { type: 'b', name: '5' } satisfies DigitalJoin,
-  divideBC: { type: 'b', name: '6' } satisfies DigitalJoin,
+  /** Master panel only in the UI. Optional: wire only the master XPanel in SIMPL. */
   combineAll: { type: 'b', name: '7' } satisfies DigitalJoin,
   divideAll: { type: 'b', name: '8' } satisfies DigitalJoin,
-  /** Held FB from that panel's identity S+ (Master / A / B / C). */
+  /** Held FB from that panel's Divisible Room Identity instance. */
   masterMode: { type: 'b', name: '13' } satisfies DigitalJoin,
   /** 0 = master, 1 = A, 2 = B, 3 = C */
   roomAssign: { type: 'n', name: '10' } satisfies AnalogJoin,

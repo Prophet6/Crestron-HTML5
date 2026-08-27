@@ -86,9 +86,17 @@ export function visibleRooms(state: PartitionState, panel: PanelId): RoomId[] {
   return zoneForRoom(state, panel).rooms;
 }
 
+/** One control surface per zone. Master sees every zone; a room panel sees only its own. */
+export function visibleZones(state: PartitionState, panel: PanelId): Zone[] {
+  if (panel === 'master') {
+    return zonesFromWalls(state);
+  }
+  return [zoneForRoom(state, panel)];
+}
+
 /**
- * Master sees both walls. A room panel sees a wall if it touches the home
- * room, or if both sides of the wall are already visible.
+ * Walls touching any room in the panel's zone. Independent A sees A|B only.
+ * After A joins B, A also sees B|C (to bring C in). Master always sees both.
  */
 export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
   if (panel === 'master') {
@@ -96,10 +104,10 @@ export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
   }
   const rooms = new Set(visibleRooms(state, panel));
   const walls: WallId[] = [];
-  if (panel === 'A' || panel === 'B' || (rooms.has('A') && rooms.has('B'))) {
+  if (rooms.has('A') || rooms.has('B')) {
     walls.push('AB');
   }
-  if (panel === 'C' || panel === 'B' || (rooms.has('B') && rooms.has('C'))) {
+  if (rooms.has('B') || rooms.has('C')) {
     walls.push('BC');
   }
   return walls;

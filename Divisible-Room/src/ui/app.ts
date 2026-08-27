@@ -21,13 +21,14 @@ import {
 import {
   masterRoom,
   summarize,
-  visibleRooms,
   visibleWalls,
+  visibleZones,
   zoneForRoom,
   zoneLabel,
   type PartitionState,
   type RoomId,
   type WallId,
+  type Zone,
 } from '../rooms';
 import { startClock } from './clock';
 
@@ -44,13 +45,13 @@ const SOURCE_COPY: Record<SourceId, { kicker: string; title: string; body: strin
   [Source.Off]: {
     kicker: 'Idle',
     title: 'Choose a source',
-    body: 'This space is waiting for a source. Laptop, Apple TV, and HDMI pages will hold device info and controls here.',
+    body: 'Select Laptop, Apple TV, or HDMI to power this space on. Device info and controls will appear here.',
     controls: '',
   },
   [Source.Laptop]: {
     kicker: 'Laptop',
     title: 'Table HDMI',
-    body: 'Connect the laptop to the HDMI cable at the table.',
+    body: 'Connect the laptop to the HDMI cable at the table. The display follows this space.',
     controls: '',
   },
   [Source.AppleTv]: {
@@ -78,6 +79,10 @@ export function mountApp(runtime: CrestronRuntime): void {
   let pendingPower: RoomId | undefined;
   let masterMode = queryMaster;
   let homeRoom: RoomId = roomFromIpId(ipId) ?? 'A';
+  let mountedKey = '';
+  let holdStop: (() => void) | undefined;
+  let holdTimer: number | undefined;
+  let holdBtn: HTMLElement | undefined;
 
   startClock(must('#clock-time'), must('#clock-date'));
   must('#cip-detail').textContent = `${processorHost} · IP-ID ${ipId.replace(/^0x/i, '')}`;
@@ -137,12 +142,6 @@ export function mountApp(runtime: CrestronRuntime): void {
     });
   }
 
-  document.querySelectorAll<HTMLElement>('[data-wall-toggle]').forEach((el) => {
-    el.addEventListener('click', () => {
-      toggleWall(el.dataset.wallToggle as WallId);
-    });
-  });
-
   must('[data-action="combine-all"]').addEventListener('click', () => {
     partitions.wallABOpen = true;
     partitions.wallBCOpen = true;
@@ -157,65 +156,81 @@ export function mountApp(runtime: CrestronRuntime): void {
     render();
   });
 
-  document.querySelectorAll<HTMLElement>('[data-source]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const room = roomFrom(el);
-      const source = normalizeSource(Number(el.dataset.source));
-      applyToZone(room, (target, id, master) => {
-        target.source = source;
-        target.power = true;
-        if (id === master) {
-          publishAnalog(RoomJoins[master].source, source);
-          const press = sourceJoin(master, source);
+  must('[data-action="open-partitions"]').addEventListener('click', openPartitions);
+  must('[data-action="close-partitions"]').addEventListener('click', closePartitions);
+
+  const zonesEl = must('#zones');
+
+  zonesEl.addEventListener('click', (event) => {
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-source], [data-mute], [data-power]');
+    if (!target || !zonesEl.contains(target)) {
+      return;
+    }
+    const room = roomFrom(target);
+    if (target.hasAttribute('data-source')) {
+      const source = normalizeSource(Number(target.dataset.source));
+      applyToZone(room, (state, id, command) => {
+        state.source = source;
+        state.power = true;
+        if (id === command) {
+          publishAnalog(RoomJoins[command].source, source);
+          const press = sourceJoin(command, source);
           if (press) {
             pulse(press);
           }
         }
       });
-    });
-  });
-
-  document.querySelectorAll<HTMLInputElement>('[data-vol]').forEach((el) => {
-    el.addEventListener('input', () => {
-      const room = el.dataset.vol as RoomId;
-      rooms[room].volume = Number(el.value);
-      must(`[data-vol-label="${room}"]`).textContent = `${rooms[room].volume}%`;
-    });
-    el.addEventListener('change', () => {
-      setZoneVolume(el.dataset.vol as RoomId, Number(el.value));
-    });
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-vol-up]').forEach((el) => {
-    bindHold(el, el.dataset.volUp as RoomId, 5);
-  });
-  document.querySelectorAll<HTMLElement>('[data-vol-down]').forEach((el) => {
-    bindHold(el, el.dataset.volDown as RoomId, -5);
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-mute]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const room = el.dataset.mute as RoomId;
+      return;
+    }
+    if (target.hasAttribute('data-mute')) {
       const next = !rooms[room].mute;
-      applyToZone(room, (target, id, master) => {
-        target.mute = next;
-        if (id === master) {
-          pulse(RoomJoins[master].mute);
+      applyToZone(room, (state, id, command) => {
+        state.mute = next;
+        if (id === command) {
+          pulse(RoomJoins[command].mute);
         }
       });
-    });
+      return;
+    }
+    if (rooms[room].power) {
+      openPowerConfirm(room);
+    }
   });
 
-  document.querySelectorAll<HTMLElement>('[data-power]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const room = el.dataset.power as RoomId;
-      if (rooms[room].power) {
-        openPowerConfirm(room);
-      } else {
-        setZonePower(room, true);
-      }
-    });
+  zonesEl.addEventListener('input', (event) => {
+    const el = event.target;
+    if (!(el instanceof HTMLInputElement) || !el.hasAttribute('data-vol')) {
+      return;
+    }
+    const room = roomFrom(el);
+    rooms[room].volume = Number(el.value);
+    const label = el.closest('.zone')?.querySelector('[data-vol-label]');
+    if (label) {
+      label.textContent = `${rooms[room].volume}%`;
+    }
   });
+
+  zonesEl.addEventListener('change', (event) => {
+    const el = event.target;
+    if (!(el instanceof HTMLInputElement) || !el.hasAttribute('data-vol')) {
+      return;
+    }
+    setZoneVolume(roomFrom(el), Number(el.value));
+  });
+
+  zonesEl.addEventListener('pointerdown', (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLElement>('[data-vol-up], [data-vol-down]');
+    if (!btn) {
+      return;
+    }
+    event.preventDefault();
+    const room = roomFrom(btn);
+    const delta = btn.hasAttribute('data-vol-up') ? 5 : -5;
+    btn.setPointerCapture(event.pointerId);
+    startHold(room, delta, btn);
+  });
+  zonesEl.addEventListener('pointerup', stopHold);
+  zonesEl.addEventListener('pointercancel', stopHold);
 
   must('[data-action="confirm-power"]').addEventListener('click', () => {
     if (pendingPower) {
@@ -225,63 +240,61 @@ export function mountApp(runtime: CrestronRuntime): void {
   });
   must('[data-action="cancel-power"]').addEventListener('click', closePowerConfirm);
 
-  function bindHold(el: HTMLElement, room: RoomId, delta: number): void {
-    let stopCs: (() => void) | undefined;
-    let timer: number | undefined;
-
-    const step = () => setZoneVolume(room, rooms[room].volume + delta);
-    const down = (event: Event) => {
-      event.preventDefault();
-      step();
-      const master = masterRoom(zoneForRoom(partitions, room));
-      const join = delta > 0 ? RoomJoins[master].volUp : RoomJoins[master].volDown;
-      stopCs = startRepeatDigital(join);
-      timer = window.setInterval(step, 250);
-    };
-    const up = (event: Event) => {
-      event.preventDefault();
-      stopCs?.();
-      stopCs = undefined;
-      if (timer !== undefined) {
-        window.clearInterval(timer);
-        timer = undefined;
-      }
-    };
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-    el.addEventListener('pointerleave', up);
+  function currentPanel() {
+    return panelFromState(masterMode, homeRoom);
   }
 
-  function toggleWall(wall: WallId): void {
-    if (wall === 'AB') {
-      partitions.wallABOpen = !partitions.wallABOpen;
-      pulse(partitions.wallABOpen ? Joins.combineAB : Joins.divideAB);
-    } else {
-      partitions.wallBCOpen = !partitions.wallBCOpen;
-      pulse(partitions.wallBCOpen ? Joins.combineBC : Joins.divideBC);
+  /** Satellite uses this panel's room joins; master uses the zone's leftmost room. S+ fans the command across the zone. */
+  function commandRoom(zone: Zone): RoomId {
+    const panel = currentPanel();
+    if (panel !== 'master' && zone.rooms.includes(homeRoom)) {
+      return homeRoom;
     }
-    render();
+    return masterRoom(zone);
+  }
+
+  function startHold(room: RoomId, delta: number, btn: HTMLElement): void {
+    stopHold();
+    holdBtn = btn;
+    holdBtn.classList.add('is-pressed');
+    setZoneVolume(room, rooms[room].volume + delta);
+    const command = commandRoom(zoneForRoom(partitions, room));
+    const join = delta > 0 ? RoomJoins[command].volUp : RoomJoins[command].volDown;
+    holdStop = startRepeatDigital(join);
+    holdTimer = window.setInterval(() => {
+      setZoneVolume(room, rooms[room].volume + delta);
+    }, 250);
+  }
+
+  function stopHold(): void {
+    holdBtn?.classList.remove('is-pressed');
+    holdBtn = undefined;
+    holdStop?.();
+    holdStop = undefined;
+    if (holdTimer !== undefined) {
+      window.clearInterval(holdTimer);
+      holdTimer = undefined;
+    }
   }
 
   function setZoneVolume(room: RoomId, percent: number): void {
     const next = Math.min(100, Math.max(0, Math.round(percent)));
-    applyToZone(room, (target, id, master) => {
-      target.volume = next;
-      if (id === master) {
-        publishAnalog(RoomJoins[master].volume, percentToAnalog(next));
+    applyToZone(room, (state, id, command) => {
+      state.volume = next;
+      if (id === command) {
+        publishAnalog(RoomJoins[command].volume, percentToAnalog(next));
       }
     });
   }
 
   function setZonePower(room: RoomId, on: boolean): void {
-    applyToZone(room, (target, id, master) => {
-      target.power = on;
+    applyToZone(room, (state, id, command) => {
+      state.power = on;
       if (!on) {
-        target.source = Source.Off;
+        state.source = Source.Off;
       }
-      if (id === master) {
-        pulse(RoomJoins[master].power);
+      if (id === command) {
+        pulse(RoomJoins[command].power);
       }
     });
   }
@@ -304,62 +317,103 @@ export function mountApp(runtime: CrestronRuntime): void {
     must('#power-confirm').hidden = true;
   }
 
+  function openPartitions(): void {
+    must('#partition-page').hidden = false;
+    must('[data-action="open-partitions"]').classList.add('is-selected');
+  }
+
+  function closePartitions(): void {
+    must('#partition-page').hidden = true;
+    must('[data-action="open-partitions"]').classList.remove('is-selected');
+  }
+
   function applyToZone(
     room: RoomId,
-    fn: (state: RoomUi, id: RoomId, master: RoomId) => void,
+    fn: (state: RoomUi, id: RoomId, command: RoomId) => void,
   ): void {
     const zone = zoneForRoom(partitions, room);
-    const master = masterRoom(zone);
+    const command = commandRoom(zone);
     for (const id of zone.rooms) {
-      fn(rooms[id], id, master);
+      fn(rooms[id], id, command);
     }
     render();
   }
 
+  function mountZoneCards(zones: Zone[]): void {
+    const template = must<HTMLTemplateElement>('#zone-template');
+    const proto = template.content.firstElementChild;
+    if (!proto) {
+      throw new Error('Zone template is empty');
+    }
+    zonesEl.replaceChildren();
+    zonesEl.dataset.count = String(Math.max(1, zones.length));
+    for (const zone of zones) {
+      const node = proto.cloneNode(true) as HTMLElement;
+      node.dataset.room = commandRoom(zone);
+      node.dataset.zone = zone.id;
+      zonesEl.appendChild(node);
+    }
+  }
+
+  function paintZone(zone: Zone): void {
+    const command = commandRoom(zone);
+    const card = zonesEl.querySelector<HTMLElement>(`.zone[data-zone="${zone.id}"]`);
+    if (!card) {
+      return;
+    }
+    const ui = rooms[command];
+    card.dataset.room = command;
+    card.classList.toggle('is-combined', zone.rooms.length > 1);
+    within(card, '[data-zone-kind]').textContent = zone.rooms.length > 1 ? 'Combined zone' : 'Room';
+    within(card, '[data-zone-name]').textContent = zone.rooms.map((id) => rooms[id].name).join(' + ');
+    within(card, '[data-zone-status]').textContent = zoneLabel(zone.id);
+
+    card.querySelectorAll<HTMLElement>('[data-source]').forEach((btn) => {
+      btn.classList.toggle('is-selected', Number(btn.dataset.source) === ui.source);
+    });
+    const slider = within<HTMLInputElement>(card, '[data-vol]');
+    if (document.activeElement !== slider) {
+      slider.value = String(ui.volume);
+    }
+    within(card, '[data-vol-label]').textContent = `${ui.volume}%`;
+    within(card, '[data-mute]').classList.toggle('is-selected', ui.mute);
+    within(card, '[data-power]').classList.toggle('is-selected', ui.source === Source.Off);
+
+    const copy = SOURCE_COPY[ui.source];
+    within(card, '.source-page').classList.toggle('is-active', ui.source !== Source.Off);
+    within(card, '[data-source-kicker]').textContent = copy.kicker;
+    within(card, '[data-source-title]').textContent = copy.title;
+    within(card, '[data-source-body]').textContent = copy.body;
+    within(card, '[data-source-controls]').innerHTML = copy.controls;
+  }
+
   function render(): void {
-    const panel = panelFromState(masterMode, homeRoom);
+    const panel = currentPanel();
+    const zones = visibleZones(partitions, panel);
+    const shownWalls = new Set(visibleWalls(partitions, panel));
+    const key = `${panel}:${zones.map((zone) => zone.id).join(',')}`;
+
+    must('#app').classList.toggle('is-master', panel === 'master');
+    must('#app').classList.toggle('is-satellite', panel !== 'master');
     must('#panel-role').textContent = panel === 'master' ? 'Master panel' : `Room ${homeRoom} panel`;
     must('#config-label').textContent = summarize(partitions);
-    const shownRooms = new Set(visibleRooms(partitions, panel));
-    const shownWalls = new Set(visibleWalls(partitions, panel));
+    must('#partition-summary').textContent = summarize(partitions);
     must('#master-actions').classList.toggle('is-hidden', panel !== 'master');
     must('#dock-rule').textContent =
       panel === 'master'
-        ? 'A cannot combine with C unless B is in the same space.'
-        : 'You only see rooms currently combined with this space.';
+        ? 'Last sensor change or Combine all / Divide all wins. A cannot join C unless B is in the same space.'
+        : 'Only walls touching this space are shown.';
 
     paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'));
     paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'));
 
-    for (const id of ROOMS) {
-      const zone = zoneForRoom(partitions, id);
-      const card = must(`.room[data-room="${id}"]`);
-      card.classList.toggle('is-hidden', !shownRooms.has(id));
-      card.dataset.zone = zone.id;
-      card.classList.toggle('is-master', masterRoom(zone) === id && zone.rooms.length > 1);
-      must(`[data-room-name="${id}"]`).textContent = rooms[id].name;
-      must(`[data-room-zone="${id}"]`).textContent = zoneLabel(zone.id);
-
-      card.querySelectorAll<HTMLElement>('[data-source]').forEach((btn) => {
-        btn.classList.toggle('is-selected', Number(btn.dataset.source) === rooms[id].source);
-      });
-      const slider = must<HTMLInputElement>(`[data-vol="${id}"]`);
-      slider.value = String(rooms[id].volume);
-      must(`[data-vol-label="${id}"]`).textContent = `${rooms[id].volume}%`;
-      must(`[data-mute="${id}"]`).classList.toggle('is-selected', rooms[id].mute);
-      must(`[data-power="${id}"]`).classList.toggle('is-selected', rooms[id].power);
-      paintSourcePage(id, rooms[id].source);
+    if (key !== mountedKey) {
+      mountZoneCards(zones);
+      mountedKey = key;
     }
-  }
-
-  function paintSourcePage(room: RoomId, source: SourceId): void {
-    const copy = SOURCE_COPY[source];
-    const page = must(`[data-source-page="${room}"]`);
-    page.classList.toggle('is-active', source !== Source.Off);
-    must(`[data-source-kicker="${room}"]`).textContent = copy.kicker;
-    must(`[data-source-title="${room}"]`).textContent = copy.title;
-    must(`[data-source-body="${room}"]`).textContent = copy.body;
-    must(`[data-source-controls="${room}"]`).innerHTML = copy.controls;
+    for (const zone of zones) {
+      paintZone(zone);
+    }
   }
 
   render();
@@ -369,8 +423,7 @@ function paintWall(wall: WallId, open: boolean, visible: boolean): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
   el.classList.toggle('is-hidden', !visible);
-  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Open' : 'Closed';
-  must(`[data-wall-toggle="${wall}"]`).textContent = open ? 'Divide' : 'Combine';
+  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Combined (sensor open)' : 'Divided (wall present)';
 }
 
 function roomFrom(el: HTMLElement): RoomId {
@@ -425,6 +478,14 @@ function setConnection(
 
 function must<T extends HTMLElement = HTMLElement>(selector: string): T {
   const el = document.querySelector<T>(selector);
+  if (!el) {
+    throw new Error(`Missing element ${selector}`);
+  }
+  return el;
+}
+
+function within<T extends HTMLElement = HTMLElement>(root: ParentNode, selector: string): T {
+  const el = root.querySelector<T>(selector);
   if (!el) {
     throw new Error(`Missing element ${selector}`);
   }

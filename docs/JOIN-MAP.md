@@ -17,24 +17,27 @@ CH5 names: [`Divisible-Room/src/crestron/joins.ts`](../Divisible-Room/src/crestr
 
 ### Panels
 
-| Panel | IP-ID | Identity S+ | Shows |
-|-------|-------|-------------|--------|
-| Room A | **E1** (`0xE1`) | Divisible Room A | Zone containing A |
-| Room B | **E2** (`0xE2`) | Divisible Room B | Zone containing B |
-| Room C | **E3** (`0xE3`) | Divisible Room C | Zone containing C |
-| Master | any | Divisible Room Master | A, B, and C always |
+| Panel | IP-ID | Identity `Panel_Role` | Shows |
+|-------|-------|----------------------|--------|
+| Room A | **E1** (`0xE1`) | 1 | Zone containing A. Partition page: A/B, then B/C after joining B |
+| Room B | **E2** (`0xE2`) | 2 | Zone containing B. Partition page: both walls |
+| Room C | **E3** (`0xE3`) | 3 | Zone containing C. Partition page: B/C, then A/B after joining B |
+| Master | any | 0 | One card column per zone. Partition page: both walls |
 
-Same `.ch5z` on every panel. Fan **Logic v1.0** outputs to every XPanel. Put **one identity module** on each XPanel (not fanned).
+Same `.ch5z` on every panel. Fan **Logic v1.0** outputs to every XPanel. Put **one Divisible Room Identity** on each XPanel (not fanned). Set `Panel_Role` on that instance.
 
 ### Identity module (per XPanel)
+
+Symbol: **Divisible Room Identity** ([`Divisible Room Identity.usp`](../Divisible-Room/simpl/Divisible%20Room%20Identity.usp)). Replaces the old A / B / C / Master copies.
 
 | XPanel join | Type | Dir | S+ signal | Values |
 |-------------|------|-----|-----------|--------|
 | Digital 13 | Digital | Program → panel | `Master_Mode_FB` | `1` = show all rooms |
 | Analog 10 | Analog | Program → panel | `Room_Assign` | `0` master, `1` A, `2` B, `3` C |
-| Digital 13 | Digital | Panel side input on identity S+ | `Master_Mode` | Room A/B/C: leave low. Master symbol forces FB high. |
+| — | Digital | Panel → identity | `Master_Mode` | High promotes a room panel to master layout. Unwired = low. Role 0 keeps FB high. |
+| — | Analog | Program → identity | `Assign_Override` | `0` / unwired = use `Panel_Role`. `1`/`2`/`3` force A/B/C at runtime. |
 
-Identity symbols: `Divisible Room Master`, `Divisible Room A`, `Divisible Room B`, `Divisible Room C`.
+Parameter `Panel_Role` is a SIMPL Windows **list**: Master Panel (`0d`), Room A (`1d`), Room B (`2d`), Room C (`3d`). Default Master Panel. Runtime analog `Assign_Override` 1–3 still wins over the parameter.
 
 ### Sensors (not panel joins)
 
@@ -42,8 +45,8 @@ Wire room partition sensors to the **core** module. Held high while the sensor *
 
 | Core S+ input | Type | Dir | Behavior |
 |---------------|------|-----|----------|
-| `Wall_AB_Sense` | Digital | Sensor → core | High = wall A\|B present. CHANGE: last event wins vs override. |
-| `Wall_BC_Sense` | Digital | Sensor → core | High = wall B\|C present. |
+| `Wall_AB_Sense` | Digital | Sensor → core | High = wall A/B present (rooms divided). Last event wins vs override. |
+| `Wall_BC_Sense` | Digital | Sensor → core | High = wall B/C present (rooms divided). |
 
 Do **not** wire these to the XPanel unless you are simulating a sensor from software.
 
@@ -53,8 +56,8 @@ Do **not** wire these to the XPanel unless you are simulating a sensor from soft
 |------|-----|-----|---------|--------|
 | 1 | Core → panel | `wallAB` | `Wall_AB_Open` | Held. `1` = combined / air wall open |
 | 2 | Core → panel | `wallBC` | `Wall_BC_Open` | Held. `1` = combined / air wall open |
-| 7 | Panel → core | `combineAll` | `Combine_All` | Pulse. Opens both walls (override) |
-| 8 | Panel → core | `divideAll` | `Divide_All` | Pulse. Closes both walls (override) |
+| 7 | Panel → core | `combineAll` | `Combine_All` | Pulse. **Master UI only.** Optional: wire master XPanel only |
+| 8 | Panel → core | `divideAll` | `Divide_All` | Pulse. **Master UI only.** Optional: wire master XPanel only |
 | 13 | Identity → panel | `masterMode` | `Master_Mode_FB` | See identity table |
 | 21 | Both | `RoomJoins.A.power` | `A_Power` / `A_Power_FB` | Pulse in, held FB. Off clears source |
 | 22 | Both | `RoomJoins.A.mute` | `A_Mute` / `A_Mute_FB` | Pulse in, held FB |
@@ -78,7 +81,7 @@ Do **not** wire these to the XPanel unless you are simulating a sensor from soft
 | 46 | Both | `RoomJoins.C.appleTv` | `C_AppleTV` / `C_AppleTV_FB` | |
 | 47 | Both | `RoomJoins.C.hdmi` | `C_HDMI` / `C_HDMI_FB` | |
 
-Single-wall Combine/Divide in the UI is **local until FB**. The current Logic module has **no** `Combine_AB` / `Divide_AB` / `Combine_BC` / `Divide_BC` pins. Processor wall state comes from **sensors** and **Combine_All / Divide_All**.
+Sensors and Combine all / Divide all last-wins. Room panels show only walls in their zone (status). Combine all / divide all is master-only in the UI; in SIMPL you can wire those two joins from the master XPanel only.
 
 ### Core Logic v1.0 — analog (XPanel)
 
@@ -108,14 +111,10 @@ When rooms are combined, the core copies the **leftmost** master onto the other 
 |------|-----|
 | 1 | Wall_AB_Open FB |
 | 2 | Wall_BC_Open FB |
-| 3 | Combine_AB override press (appended on Logic module) |
-| 4 | Divide_AB override press |
-| 5 | Combine_BC override press |
-| 6 | Divide_BC override press |
-| 7 | Combine_All press |
-| 8 | Divide_All press |
-| 9–10 | Open |
-| 11–12 | Open |
+| 3–6 | Open |
+| 7 | Combine_All (master) |
+| 8 | Divide_All (master) |
+| 9–12 | Open |
 | 13 | Master_Mode_FB |
 | 14–20 | Open |
 | 21–27 | Room A (power, mute, vol ±, laptop, ATV, HDMI) |
