@@ -41,7 +41,7 @@ Each zone is two cards: **OFF + sources** and **volume + mute**. **Partitions** 
 | [`public/config/contract.cse2j`](public/config/contract.cse2j) | Runtime path CrComLib expects |
 | [`contracts/divisible-room.chd`](contracts/divisible-room.chd) | SIMPL **Manage GUI Extenders** |
 
-Signal list: [`docs/CONTRACT-MAP.md`](docs/CONTRACT-MAP.md). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Lab program: [`simpl/Divisible Room with Contracts.smw`](simpl/).
+Signal list: [`docs/CONTRACT-MAP.md`](docs/CONTRACT-MAP.md). SIMPL wiring: [`docs/simpl.md`](docs/simpl.md). Lab program: [`simpl/Divisible Room.smw`](simpl/).
 
 On each HTML5 XPanel, attach the `.chd` and leave Control Join Ids **1–6** (Walls, Identity, PowerConfirm, RoomA, RoomB, RoomC). Do not also wire numbered joins for these signals.
 

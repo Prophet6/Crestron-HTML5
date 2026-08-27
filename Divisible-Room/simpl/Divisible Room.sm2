@@ -18,7 +18,7 @@ CnH=2
 S0Nd=1
 S1Nd=2
 SLNd=3
-PrNm=Divisible Room with Contracts.smw
+PrNm=Divisible Room.smw
 CmVr=3.03
 DbVr=228.55.001.00
 DvcDbVr=200.465.001.00
@@ -1385,6 +1385,20 @@ Sy1=0
 Mx1=0
 ]
 [
+ObjTp=Bw
+H=1
+Lx=0
+Ly=0
+Rx=2018
+Ry=1520
+Xm=-1
+Ym=-1
+SH=29
+Z=100
+Ht=1
+Hi=4
+]
+[
 ObjTp=Et
 H=1
 DvH=555
@@ -1417,7 +1431,7 @@ ObjTp=VTP
 H=1
 DvH=555
 GuiExtType=2
-SGDFile=..\contracts\divisible-room.chd
+SGDFile=..\..\Divisible-Room-Contracts\contracts\divisible-room.chd
 ContractID=divisible-room-contracts-v1
 DateTimeUTC=2026-08-27 20:05:14.182
 VtpVer=1
@@ -1428,7 +1442,7 @@ ObjTp=VTP
 H=2
 DvH=558
 GuiExtType=2
-SGDFile=..\contracts\divisible-room.chd
+SGDFile=..\..\Divisible-Room-Contracts\contracts\divisible-room.chd
 ContractID=divisible-room-contracts-v1
 DateTimeUTC=2026-08-27 20:05:14.182
 VtpVer=1
@@ -1439,7 +1453,7 @@ ObjTp=VTP
 H=3
 DvH=559
 GuiExtType=2
-SGDFile=..\contracts\divisible-room.chd
+SGDFile=..\..\Divisible-Room-Contracts\contracts\divisible-room.chd
 ContractID=divisible-room-contracts-v1
 DateTimeUTC=2026-08-27 20:05:14.182
 VtpVer=1
@@ -1450,7 +1464,7 @@ ObjTp=VTP
 H=4
 DvH=560
 GuiExtType=2
-SGDFile=..\contracts\divisible-room.chd
+SGDFile=..\..\Divisible-Room-Contracts\contracts\divisible-room.chd
 ContractID=divisible-room-contracts-v1
 DateTimeUTC=2026-08-27 20:05:14.182
 VtpVer=1
@@ -2033,8 +2047,8 @@ n1I=30
 n2I=8
 n1O=30
 mI=38
-I1=77
-I2=8
+I1=6
+I2=77
 I4=17
 I5=18
 I7=29
@@ -2999,13 +3013,13 @@ SgTp=2
 ]
 [
 ObjTp=Sg
-H=7
-Nm=//Interface_B_Master_Mode
+H=6
+Nm=//Wall_Sensor_AB
 ]
 [
 ObjTp=Sg
-H=8
-Nm=Wall_Sensor_BC
+H=7
+Nm=//Interface_B_Master_Mode
 ]
 [
 ObjTp=Sg
@@ -3372,7 +3386,7 @@ SgTp=2
 [
 ObjTp=Sg
 H=77
-Nm=Wall_Sensor_AB
+Nm=//Wall_Sensor_BC
 ]
 [
 ObjTp=Sg
