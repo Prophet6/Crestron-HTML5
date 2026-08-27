@@ -17,7 +17,16 @@
         <div class="header__title">
           <p class="eyebrow" id="panel-role">Master panel</p>
           <div class="header__title-row">
-            <h1 id="config-label">Three independent rooms</h1>
+            <button
+              type="button"
+              class="btn header__state"
+              id="config-label"
+              data-action="open-partitions"
+              aria-expanded="false"
+              aria-controls="partition-page"
+            >
+              Three independent rooms
+            </button>
             <div class="header__walls" aria-label="Wall state">
               <span class="header-wall" data-header-wall="AB">
                 <span class="header-wall__name">A | B</span>
@@ -28,7 +37,6 @@
                 <span class="header-wall__state" data-header-wall-state="BC">Divided</span>
               </span>
             </div>
-            <button type="button" class="btn header__partition" data-action="open-partitions">Partitions</button>
           </div>
         </div>
         <div class="header__clock">

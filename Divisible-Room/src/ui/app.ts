@@ -396,12 +396,16 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   function openPartitions(): void {
     must('#partition-page').hidden = false;
-    must('[data-action="open-partitions"]').classList.add('is-selected');
+    const btn = must('[data-action="open-partitions"]');
+    btn.classList.add('is-selected');
+    btn.setAttribute('aria-expanded', 'true');
   }
 
   function closePartitions(): void {
     must('#partition-page').hidden = true;
-    must('[data-action="open-partitions"]').classList.remove('is-selected');
+    const btn = must('[data-action="open-partitions"]');
+    btn.classList.remove('is-selected');
+    btn.setAttribute('aria-expanded', 'false');
   }
 
   function applyToZone(
