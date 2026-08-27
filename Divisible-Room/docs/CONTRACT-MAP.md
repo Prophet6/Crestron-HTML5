@@ -8,10 +8,14 @@ Rebuild with `npm run generate:contract`.
 
 | CH5 name | Type | CHD | Logic S+ |
 |----------|------|-----|----------|
-| `Walls.ABOpen` | digital state | Input `ABOpen` | `Wall_AB_Open` |
-| `Walls.BCOpen` | digital state | Input `BCOpen` | `Wall_BC_Open` |
-| `Walls.CombineAll` | digital event | Output `CombineAll` | `Combine_All` |
-| `Walls.DivideAll` | digital event | Output `DivideAll` | `Divide_All` |
+| `Walls.ABOpen` | digital state | Input `ABOpen` | `Wall_AB_Open_FB` |
+| `Walls.BCOpen` | digital state | Input `BCOpen` | `Wall_BC_Open_FB` |
+| `Walls.CombineAll` | digital event | Output `CombineAll` | `Wall_Combine_All` |
+| `Walls.DivideAll` | digital event | Output `DivideAll` | `Wall_Divide_All` |
+| `Walls.ABToggle` | digital event | Output `ABToggle` | `Wall_AB_Toggle` |
+| `Walls.BCToggle` | digital event | Output `BCToggle` | `Wall_BC_Toggle` |
+
+Logic wall inputs (user order — do not restack): `Wall_AB_Sense`, `Wall_BC_Sense`, skip, `Wall_Combine_All`, `Wall_Divide_All`, `Wall_AB_Toggle`, `Wall_BC_Toggle`. Combine/divide all is **Master_Mode only** on the UI; per-wall toggles are on every panel for walls that panel can see.
 
 ## Identity (Control Join Id 2)
 

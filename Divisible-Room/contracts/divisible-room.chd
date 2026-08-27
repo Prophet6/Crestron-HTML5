@@ -10,20 +10,20 @@ Schema=1
 ProjectFile=DivisibleRoom
 ContractID=divisible-room-contracts-v1
 CEProjectVer=1.0.0.0
-DateTimeUTC=2026-08-27 20:38:17.662
+DateTimeUTC=2026-08-27 22:22:09.784
 ]
 [
 ObjTp=Symbol
 Name=Walls
 SmplCName=DivisibleRoom.Walls
-Hint=Walls (Control Join Id 1) — Partition walls and master combine/divide all
+Hint=Walls (Control Join Id 1) — Partition walls, per-wall toggle, master combine/divide all
 Code=1
 SMWRev=4.28.00
 Expand=expand_separately
 MinVariableInputs=2
 MaxVariableInputs=2
-MinVariableOutputs=2
-MaxVariableOutputs=2
+MinVariableOutputs=4
+MaxVariableOutputs=4
 MinVariableInputsList2=0
 MaxVariableInputsList2=0
 MinVariableOutputsList2=0
@@ -51,6 +51,12 @@ OutputToolTip1=Walls.CombineAll (panel → program)
 OutputCue2=DivideAll
 OutputSigType2=Digital
 OutputToolTip2=Walls.DivideAll (panel → program)
+OutputCue3=ABToggle
+OutputSigType3=Digital
+OutputToolTip3=Walls.ABToggle (panel → program)
+OutputCue4=BCToggle
+OutputSigType4=Digital
+OutputToolTip4=Walls.BCToggle (panel → program)
 ]
 [
 ObjTp=Dp

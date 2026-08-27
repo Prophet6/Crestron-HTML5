@@ -4,7 +4,7 @@ The HTML5 XPanel uses the **GUI extender** from [`contracts/divisible-room.chd`]
 
 ## Attach the contract
 
-1. Add an HTML5 XPanel (E1 / E2 / E3 / master).
+1. Add an HTML5 XPanel (E1 / E2 / E3 / **C1** master).
 2. **Project → Manage GUI Extenders** → browse to `Divisible-Room/contracts/divisible-room.chd` → Commit.
 3. Confirm Control Join Ids: **1 Walls, 2 Identity, 3 PowerConfirm, 4 RoomA, 5 RoomB, 6 RoomC**.
 
@@ -17,6 +17,12 @@ The HTML5 XPanel uses the **GUI extender** from [`contracts/divisible-room.chd`]
 | Power Shutdown Confirmation v1.0 | 1 per panel |
 
 Wire Identity `Master_Mode_FB` → extender Identity `MasterMode`, `Room_Assign` → `RoomAssign`.
+
+Wire Walls extender outputs `CombineAll` / `DivideAll` / `ABToggle` / `BCToggle` to Logic `Wall_Combine_All` / `Wall_Divide_All` / `Wall_AB_Toggle` / `Wall_BC_Toggle`. Fan Logic `Wall_AB_Open_FB` / `Wall_BC_Open_FB` to every XPanel Walls input.
+
+Room panels (E1–E3, `Master_Mode` off) get Combine / Divide on each wall in their zone only — never Combine all / Divide all. IP-ID **C1** and any panel with `Master_Mode` high get both wall toggles plus Combine all / Divide all.
+
+When A+B+C, Room A and Room C cannot close A|B while B|C is open (would leave B+C combined). They must close B|C first. Master and Room B may close either wall. This is enforced in the UI (Logic S+ does not know which panel pressed the shared toggle).
 
 Wire Shutdown `Initiate`/`Cancel`/`Confirm` from PowerConfirm extender outputs; `Warning_Page_FB` / `Shutdown_OS` / counts to extender inputs.
 

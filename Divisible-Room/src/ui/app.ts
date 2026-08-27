@@ -12,8 +12,11 @@ import { Joins, RoomJoins, Source, type SourceId } from '../crestron/joins';
 import type { ConnectionState, CrestronRuntime } from '../crestron/init';
 import {
   ipId,
+  isMasterIpId,
   panelFromState,
   queryMaster,
+  queryPartitions,
+  queryWalls,
   roomFromAssign,
   roomFromIpId,
   processorHost,
@@ -21,6 +24,7 @@ import {
 import {
   masterRoom,
   summarize,
+  canToggleWall,
   visibleWalls,
   visibleZones,
   zoneForRoom,
@@ -70,7 +74,10 @@ const SOURCE_COPY: Record<SourceId, { kicker: string; title: string; body: strin
 };
 
 export function mountApp(runtime: CrestronRuntime): void {
-  const partitions: PartitionState = { wallABOpen: false, wallBCOpen: false };
+  const partitions: PartitionState = {
+    wallABOpen: queryWalls === 'abc' || queryWalls === 'ab',
+    wallBCOpen: queryWalls === 'abc' || queryWalls === 'bc',
+  };
   const rooms: Record<RoomId, RoomUi> = {
     A: { source: Source.Off, volume: 0, mute: false, power: false, name: 'A' },
     B: { source: Source.Off, volume: 0, mute: false, power: false, name: 'B' },
@@ -78,12 +85,16 @@ export function mountApp(runtime: CrestronRuntime): void {
   };
   let pendingPower: RoomId | undefined;
   let linked = false;
-  let masterMode = queryMaster;
+  let masterMode = queryMaster || isMasterIpId(ipId);
   let homeRoom: RoomId = roomFromIpId(ipId) ?? 'A';
   let mountedKey = '';
   let holdStop: (() => void) | undefined;
   let holdTimer: number | undefined;
   let holdBtn: HTMLElement | undefined;
+
+  function currentPanel() {
+    return panelFromState(masterMode, homeRoom, ipId);
+  }
 
   startClock(must('#clock-time'), must('#clock-date'));
   must('#cip-detail').textContent = `${processorHost} · IP-ID ${ipId.replace(/^0x/i, '')}`;
@@ -93,15 +104,19 @@ export function mountApp(runtime: CrestronRuntime): void {
   });
 
   subscribeDigital(Joins.wallAB, (value) => {
-    partitions.wallABOpen = value;
+    if (linked || !queryWalls) {
+      partitions.wallABOpen = value;
+    }
     render();
   });
   subscribeDigital(Joins.wallBC, (value) => {
-    partitions.wallBCOpen = value;
+    if (linked || !queryWalls) {
+      partitions.wallBCOpen = value;
+    }
     render();
   });
   subscribeDigital(Joins.masterMode, (value) => {
-    masterMode = value;
+    masterMode = isMasterIpId(ipId) || (linked ? value : queryMaster || value);
     render();
   });
   subscribeAnalog(Joins.roomAssign, (value) => {
@@ -145,6 +160,9 @@ export function mountApp(runtime: CrestronRuntime): void {
   }
 
   must('[data-action="combine-all"]').addEventListener('click', () => {
+    if (currentPanel() !== 'master') {
+      return;
+    }
     partitions.wallABOpen = true;
     partitions.wallBCOpen = true;
     pulse(Joins.combineAll);
@@ -152,9 +170,35 @@ export function mountApp(runtime: CrestronRuntime): void {
   });
 
   must('[data-action="divide-all"]').addEventListener('click', () => {
+    if (currentPanel() !== 'master') {
+      return;
+    }
     partitions.wallABOpen = false;
     partitions.wallBCOpen = false;
     pulse(Joins.divideAll);
+    render();
+  });
+
+  must('#partition-page').addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLElement>('[data-wall-toggle]');
+    if (!btn) {
+      return;
+    }
+    const wall = btn.dataset.wallToggle;
+    if (wall !== 'AB' && wall !== 'BC') {
+      return;
+    }
+    const panel = currentPanel();
+    if (!canToggleWall(partitions, panel, wall)) {
+      return;
+    }
+    if (wall === 'AB') {
+      partitions.wallABOpen = !partitions.wallABOpen;
+      pulse(Joins.wallABToggle);
+    } else {
+      partitions.wallBCOpen = !partitions.wallBCOpen;
+      pulse(Joins.wallBCToggle);
+    }
     render();
   });
 
@@ -270,10 +314,6 @@ export function mountApp(runtime: CrestronRuntime): void {
       el.textContent = String(value);
     }
   });
-
-  function currentPanel() {
-    return panelFromState(masterMode, homeRoom);
-  }
 
   /** Satellite uses this panel's room joins; master uses the zone's leftmost room. S+ fans the command across the zone. */
   function commandRoom(zone: Zone): RoomId {
@@ -424,19 +464,22 @@ export function mountApp(runtime: CrestronRuntime): void {
     const shownWalls = new Set(visibleWalls(partitions, panel));
     const key = `${panel}:${zones.map((zone) => zone.id).join(',')}`;
 
-    must('#app').classList.toggle('is-master', panel === 'master');
-    must('#app').classList.toggle('is-satellite', panel !== 'master');
-    must('#panel-role').textContent = panel === 'master' ? 'Master panel' : `Room ${homeRoom} panel`;
+    const masterUi = panel === 'master';
+    must('#app').classList.toggle('is-master', masterUi);
+    must('#app').classList.toggle('is-satellite', !masterUi);
+    must('#panel-role').textContent = masterUi ? 'Master panel' : `Room ${homeRoom} panel`;
     must('#config-label').textContent = summarize(partitions);
     must('#partition-summary').textContent = summarize(partitions);
-    must('#master-actions').classList.toggle('is-hidden', panel !== 'master');
-    must('#dock-rule').textContent =
-      panel === 'master'
-        ? 'Last sensor change or Combine all / Divide all wins. A cannot join C unless B is in the same space.'
-        : 'Only walls touching this space are shown.';
+    must('#master-actions').hidden = !masterUi;
+    must('#master-actions').classList.toggle('is-hidden', !masterUi);
+    must('#dock-rule').textContent = masterUi
+      ? 'Last sensor change, wall toggle, or Combine all / Divide all wins. A cannot join C unless B is in the same space.'
+      : partitions.wallABOpen && partitions.wallBCOpen && homeRoom !== 'B'
+        ? 'When all three are combined, close B|C before A|B so B+C are not left combined.'
+        : 'Toggle any wall touching this space. Combine all / Divide all is master-only.';
 
-    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'));
-    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'));
+    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'), canToggleWall(partitions, panel, 'AB'));
+    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'), canToggleWall(partitions, panel, 'BC'));
 
     if (key !== mountedKey) {
       mountZoneCards(zones);
@@ -448,13 +491,22 @@ export function mountApp(runtime: CrestronRuntime): void {
   }
 
   render();
+  if (queryPartitions) {
+    openPartitions();
+  }
 }
 
-function paintWall(wall: WallId, open: boolean, visible: boolean): void {
+function paintWall(wall: WallId, open: boolean, visible: boolean, enabled: boolean): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
   el.classList.toggle('is-hidden', !visible);
-  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Combined (sensor open)' : 'Divided (wall present)';
+  must(`[data-wall-state="${wall}"]`).textContent = open ? 'Combined (open)' : 'Divided (wall present)';
+  const btn = el.querySelector<HTMLButtonElement>('[data-wall-toggle]');
+  if (btn) {
+    btn.textContent = open ? 'Divide' : 'Combine';
+    btn.disabled = !enabled;
+    btn.title = enabled || !open ? '' : 'Close B | C first';
+  }
 }
 
 function roomFrom(el: HTMLElement): RoomId {

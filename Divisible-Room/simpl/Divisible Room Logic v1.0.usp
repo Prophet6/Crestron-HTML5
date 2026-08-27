@@ -9,12 +9,16 @@ Shared core — one instance, fan AV/wall FB to every XPanel.
 Each panel gets one Divisible Room Identity (parameter + analog override).
 
 Wall_AB_Sense / Wall_BC_Sense stay high while the sensor sees a wall
-(wall present = rooms divided). Combine_All / Divide_All override both
-walls (master panel). Last sensor change or last override press wins.
+(wall present = rooms divided). Wall_AB_Toggle / Wall_BC_Toggle flip that
+wall (any panel that can see it). Wall_Combine_All / Wall_Divide_All
+override both walls (Master_Mode only on the UI). Last sensor change or
+last override press wins.
 
 Selecting a source powers that room on. Powering off clears the source.
 
 -- VERSION HISTORY --
+v1.8  2026-08-27
+- Wall_AB_Toggle / Wall_BC_Toggle appended (flip one wall; last-wins vs sensors)
 v1.7  2026-08-26
 - Combine_All / Divide_All under sensors; no per-wall Combine/Divide
 - Digital/analog I/O skips so each input lines up with its FB
@@ -44,7 +48,8 @@ v1.0  2026-08-25
 
 DIGITAL_INPUT	Wall_AB_Sense, Wall_BC_Sense,
 				_SKIP_,
-				Combine_All, Divide_All,
+				Wall_Combine_All, Wall_Divide_All,
+				Wall_AB_Toggle, Wall_BC_Toggle,
 				_SKIP_,
 				A_Power, A_Mute, A_Laptop, A_AppleTV, A_HDMI,
 				_SKIP_,
@@ -59,9 +64,9 @@ ANALOG_INPUT	_SKIP_,
 				_SKIP_,
 				A_Source, B_Source, C_Source;
 
-DIGITAL_OUTPUT	Wall_AB_Open, Wall_BC_Open,
+DIGITAL_OUTPUT	Wall_AB_Open_FB, Wall_BC_Open_FB,
 				_SKIP_,
-				_SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				_SKIP_,
 				A_Power_FB, A_Mute_FB, A_Laptop_FB, A_AppleTV_FB, A_HDMI_FB,
 				_SKIP_,
@@ -269,8 +274,8 @@ Function SyncCombined () {
 }
 
 Function ApplyZones () {
-	Wall_AB_Open = Wall_AB;
-	Wall_BC_Open = Wall_BC;
+	Wall_AB_Open_FB = Wall_AB;
+	Wall_BC_Open_FB = Wall_BC;
 	DriveRoom (1);
 	DriveRoom (2);
 	DriveRoom (3);
@@ -408,18 +413,38 @@ Function BumpVol (INTEGER room, INTEGER dirUp) {
 	ApplyZones ();
 }
 
-PUSH Combine_All {
+Function ToggleWall (INTEGER wall) {
+	If (wall = 1) {
+		If (Wall_AB = 1)
+			Wall_AB = 0;
+		Else
+			Wall_AB = 1;
+	}
+	If (wall = 2) {
+		If (Wall_BC = 1)
+			Wall_BC = 0;
+		Else
+			Wall_BC = 1;
+	}
+	SyncCombined ();
+	ApplyZones ();
+}
+
+PUSH Wall_Combine_All {
 	Wall_AB = 1;
 	Wall_BC = 1;
 	SyncCombined ();
 	ApplyZones ();
 }
 
-PUSH Divide_All {
+PUSH Wall_Divide_All {
 	Wall_AB = 0;
 	Wall_BC = 0;
 	ApplyZones ();
 }
+
+PUSH Wall_AB_Toggle { ToggleWall (1); }
+PUSH Wall_BC_Toggle { ToggleWall (2); }
 
 PUSH A_Power { PowerToggle (1); }
 PUSH B_Power { PowerToggle (2); }

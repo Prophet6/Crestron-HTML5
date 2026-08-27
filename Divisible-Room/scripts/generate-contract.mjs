@@ -32,7 +32,7 @@ const components = [
   {
     instance: 'Walls',
     smartObjectId: 1,
-    hint: 'Partition walls and master combine/divide all',
+    hint: 'Partition walls, per-wall toggle, master combine/divide all',
     states: [
       { name: 'ABOpen', type: 'b' },
       { name: 'BCOpen', type: 'b' },
@@ -40,6 +40,8 @@ const components = [
     events: [
       { name: 'CombineAll', type: 'b' },
       { name: 'DivideAll', type: 'b' },
+      { name: 'ABToggle', type: 'b' },
+      { name: 'BCToggle', type: 'b' },
     ],
   },
   {

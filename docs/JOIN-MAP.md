@@ -25,10 +25,10 @@ CH5 names: [`Divisible-Room/src/crestron/joins.ts`](../Divisible-Room/src/crestr
 
 | Panel | IP-ID | Identity `Panel_Role` | Shows |
 |-------|-------|----------------------|--------|
-| Room A | **E1** (`0xE1`) | 1 | Zone containing A. Partition page: A/B, then B/C after joining B |
-| Room B | **E2** (`0xE2`) | 2 | Zone containing B. Partition page: both walls |
-| Room C | **E3** (`0xE3`) | 3 | Zone containing C. Partition page: B/C, then A/B after joining B |
-| Master | any | 0 | One card column per zone. Partition page: both walls |
+| Room A | **E1** (`0xE1`) | 1 | Zone containing A. Walls this room can see. No Combine all / Divide all unless `Master_Mode` is high |
+| Room B | **E2** (`0xE2`) | 2 | Zone containing B. Both walls. No Combine all / Divide all unless `Master_Mode` is high |
+| Room C | **E3** (`0xE3`) | 3 | Zone containing C. Walls this room can see. No Combine all / Divide all unless `Master_Mode` is high |
+| Master | **C1** (`0xC1`) | 0 | One card column per zone. Both wall toggles + Combine all / Divide all. Same UI if `Master_Mode` is high on E1–E3 |
 
 Same `.ch5z` on every panel. Fan **Logic v1.0** outputs to every XPanel. Put **one Divisible Room Identity** on each XPanel (not fanned). Set `Panel_Role` on that instance.
 
@@ -71,6 +71,17 @@ Wire room partition sensors to the **core** module. Held high while the sensor *
 | `Wall_BC_Sense` | Digital | Sensor → core | High = wall B/C present (rooms divided). |
 
 Do **not** wire these to the XPanel unless you are simulating a sensor from software.
+
+Panel wall overrides (CHD Walls outputs → Logic inputs). Last sensor change or last override wins.
+
+| Logic S+ | Type | Dir | Behavior |
+|----------|------|-----|----------|
+| `Wall_Combine_All` | Digital | Panel → core | Pulse. Sets both walls open. **UI only when `Master_Mode` is high.** |
+| `Wall_Divide_All` | Digital | Panel → core | Pulse. Sets both walls closed. **UI only when `Master_Mode` is high.** |
+| `Wall_AB_Toggle` | Digital | Panel → core | Pulse. Flip A/B. Room panels that can see A\|B always get this. |
+| `Wall_BC_Toggle` | Digital | Panel → core | Pulse. Flip B/C. Room panels that can see B\|C always get this. |
+
+Logic digital input order (canonical — do not restack): Sense AB/BC, skip, Combine_All, Divide_All, AB_Toggle, BC_Toggle, skip, then A/B/C AV, then volume ±. FB: `Wall_AB_Open_FB` / `Wall_BC_Open_FB`.
 
 ### Core Logic v1.0 — digital (XPanel)
 

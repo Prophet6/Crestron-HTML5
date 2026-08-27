@@ -24,12 +24,12 @@ Same stack: vanilla TypeScript, Vite, CrComLib. One `.ch5z` on every panel. Room
 
 | Panel | IP-ID | Identity `Panel_Role` | What it shows |
 |-------|-------|----------------------|---------------|
-| Room A | E1 | 1 | A's zone, full screen. Partitions: A/B wall (B/C after joining B) |
-| Room B | E2 | 2 | B's zone, full screen. Partitions: both walls |
-| Room C | E3 | 3 | C's zone, full screen. Partitions: B/C wall (A/B after joining B) |
-| Master | any | 0 (or drive `Master_Mode` high on a room instance) | One column per zone. Partitions: both walls + combine/divide all |
+| Room A | E1 | 1 | A's zone. Partitions: walls this room can see. No Combine all / Divide all unless `Master_Mode` is high |
+| Room B | E2 | 2 | B's zone. Partitions: both walls. No Combine all / Divide all unless `Master_Mode` is high |
+| Room C | E3 | 3 | C's zone. Partitions: walls this room can see. No Combine all / Divide all unless `Master_Mode` is high |
+| Master | **C1** | 0 (or `Master_Mode` high on a room panel) | One column per zone. Both wall toggles + Combine all / Divide all |
 
-Each zone is two cards: **OFF + sources** and **volume + mute**. **Partitions** is on the header. Combine all / divide all is master-only. Power-off uses [Power Shutdown Confirmation v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (one instance per panel).
+Each zone is two cards: **OFF + sources** and **volume + mute**. **Partitions** is on the header. Each visible wall has a Combine / Divide toggle (`Wall_AB_Toggle` / `Wall_BC_Toggle`) on every panel that can see that wall. Room A and Room C cannot close A\|B while B\|C is still open (that would leave B+C combined). Combine all / divide all (`Wall_Combine_All` / `Wall_Divide_All`) is shown only when that panel’s `Master_Mode` is high. Power-off uses [Power Shutdown Confirmation v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/power-shutdown-confirmation) (one instance per panel).
 
 ## Contract artifacts
 
@@ -54,7 +54,7 @@ npm run generate:contract
 npm run dev
 ```
 
-Vite is **http://localhost:5174**. Try `/?ipId=E1` and `/?master=1`.
+Vite is **http://localhost:5174**. Try `/?ipId=E1`, `/?ipId=C1`, `/?master=1`, `/?partitions=1`, and `/?walls=abc`.
 
 ```bash
 npm run build:ch5z
@@ -64,4 +64,6 @@ npm run deploy:xpanel
 ```
 https://192.168.86.200/divisible-room/index.html?ipID=E1&authToken=<token>
 https://192.168.86.200/divisible-room/index.html?ipID=E2&authToken=<token>
+https://192.168.86.200/divisible-room/index.html?ipID=E3&authToken=<token>
+https://192.168.86.200/divisible-room/index.html?ipID=C1&authToken=<token>
 ```

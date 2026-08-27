@@ -96,7 +96,8 @@ export function visibleZones(state: PartitionState, panel: PanelId): Zone[] {
 
 /**
  * Walls touching any room in the panel's zone. Independent A sees A|B only.
- * After A joins B, A also sees B|C (to bring C in). Master always sees both.
+ * After A joins B, A also sees B|C (to bring C in). Master (or Master_Mode)
+ * always sees both.
  */
 export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
   if (panel === 'master') {
@@ -111,4 +112,24 @@ export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
     walls.push('BC');
   }
   return walls;
+}
+
+/**
+ * A room must not orphan a combined pair it is leaving.
+ * If A+B+C, closing A|B leaves B+C combined — Room A must close B|C first,
+ * and Room C must not close A|B before B|C. Master and Room B may close either.
+ * Opening a visible wall is always allowed.
+ */
+export function canToggleWall(state: PartitionState, panel: PanelId, wall: WallId): boolean {
+  if (!visibleWalls(state, panel).includes(wall)) {
+    return false;
+  }
+  if (panel === 'master' || panel === 'B') {
+    return true;
+  }
+  const closingAb = wall === 'AB' && state.wallABOpen;
+  if (closingAb && state.wallBCOpen && (panel === 'A' || panel === 'C')) {
+    return false;
+  }
+  return true;
 }

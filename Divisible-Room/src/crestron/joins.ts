@@ -21,6 +21,8 @@ export const Joins = {
   wallBC: b('Walls.BCOpen'),
   combineAll: b('Walls.CombineAll'),
   divideAll: b('Walls.DivideAll'),
+  wallABToggle: b('Walls.ABToggle'),
+  wallBCToggle: b('Walls.BCToggle'),
   masterMode: b('Identity.MasterMode'),
   roomAssign: n('Identity.RoomAssign'),
   nameA: s('RoomA.Name'),

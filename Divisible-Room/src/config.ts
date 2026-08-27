@@ -29,15 +29,24 @@ function firstNonEmpty(...values: Array<string | undefined | null>): string | un
 export const processorHost =
   firstNonEmpty(queryParam('host'), import.meta.env.VITE_PROCESSOR_HOST) ?? '192.168.86.200';
 
-/** Room A = E1, Room B = E2, Room C = E3. */
+/** Room A = E1, Room B = E2, Room C = E3. Master panel = C1. */
 export const ipId = firstNonEmpty(queryParam('ipid', 'ipId'), import.meta.env.VITE_IP_ID) ?? '0xE1';
+
+export function ipIdValue(value: string): number {
+  return Number.parseInt(value.replace(/^0x/i, ''), 16);
+}
+
+/** Dedicated master XPanel (IP-ID C1). */
+export function isMasterIpId(value: string): boolean {
+  return ipIdValue(value) === 0xc1;
+}
 
 export const authToken = queryParam('authtoken', 'authToken');
 
 export const debugEnabled = [...params.keys()].some((key) => key.toLowerCase() === 'debug');
 
 export function roomFromIpId(value: string): RoomId | undefined {
-  const hex = Number.parseInt(value.replace(/^0x/i, ''), 16);
+  const hex = ipIdValue(value);
   if (hex === 0xe1) {
     return 'A';
   }
@@ -66,6 +75,19 @@ export function roomFromAssign(value: number): RoomId | undefined {
 /** Vite-only: ?master=1 forces master layout before CIP. */
 export const queryMaster = queryParam('master') === '1';
 
-export function panelFromState(masterMode: boolean, home: RoomId): PanelId {
-  return masterMode ? 'master' : home;
+/** Vite-only: ?partitions=1 opens the wall overlay. */
+export const queryPartitions = queryParam('partitions') === '1';
+
+/** Vite-only: ?walls=abc | ab | bc presets partition state before CIP. */
+export const queryWalls = (queryParam('walls') ?? '').toLowerCase();
+
+/**
+ * Master UI: IP-ID C1, Identity Master_Mode high, or Vite ?master=1.
+ * E1/E2/E3 with Master_Mode off stay room panels.
+ */
+export function panelFromState(masterMode: boolean, home: RoomId, panelIpId: string = ipId): PanelId {
+  if (masterMode || isMasterIpId(panelIpId)) {
+    return 'master';
+  }
+  return home;
 }

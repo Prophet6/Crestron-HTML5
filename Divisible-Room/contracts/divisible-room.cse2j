@@ -1,6 +1,6 @@
 {
 	"name": "DivisibleRoom",
-	"timestamp": "2026-08-27 20:38:17.662",
+	"timestamp": "2026-08-27 22:22:09.784",
 	"version": "1.0.0.0",
 	"schema_version": 1,
 	"extra_value": "Divisible-Room name-based CH5 contract",
@@ -83,6 +83,14 @@
 				},
 				"Walls.DivideAll": {
 					"joinId": 2,
+					"smartObjectId": 1
+				},
+				"Walls.ABToggle": {
+					"joinId": 3,
+					"smartObjectId": 1
+				},
+				"Walls.BCToggle": {
+					"joinId": 4,
 					"smartObjectId": 1
 				},
 				"PowerConfirm.Initiate": {

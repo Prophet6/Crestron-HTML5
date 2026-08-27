@@ -50,7 +50,7 @@
       <div id="partition-page" class="overlay" hidden>
         <div class="overlay__card overlay__card--wide">
           <p class="eyebrow">Partitions</p>
-          <h2>Wall sensors</h2>
+          <h2>Walls</h2>
           <p class="rule" id="partition-summary">Three independent rooms</p>
           <p class="rule" id="dock-rule">Last sensor change or override wins. A cannot join C unless B is in the same space.</p>
           <div class="partition-walls">
@@ -59,15 +59,17 @@
                 <p class="wall__label">A | B</p>
                 <p class="wall__state" data-wall-state="AB">Divided</p>
               </div>
+              <button type="button" class="btn wall__btn" data-wall-toggle="AB">Combine</button>
             </div>
             <div class="wall" data-wall="BC">
               <div class="wall__meta">
                 <p class="wall__label">B | C</p>
                 <p class="wall__state" data-wall-state="BC">Divided</p>
               </div>
+              <button type="button" class="btn wall__btn" data-wall-toggle="BC">Combine</button>
             </div>
           </div>
-          <div class="partition-master" id="master-actions">
+          <div class="partition-master is-hidden" id="master-actions" hidden>
             <button type="button" class="btn" data-action="combine-all">Combine all three</button>
             <button type="button" class="btn btn--ghost" data-action="divide-all">Divide all</button>
           </div>

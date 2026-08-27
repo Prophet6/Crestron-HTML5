@@ -524,11 +524,21 @@ input[type='range'] {
   font-size: 16px;
 }
 
+.wall__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .partition-master {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 8px;
+}
+
+.partition-master.is-hidden,
+.partition-master[hidden] {
+  display: none;
 }
 
 .header__partition.is-selected {
@@ -557,7 +567,8 @@ input[type='range'] {
     min-height: 56px;
   }
 
+  /* Keep volume in the right column; 1280x800 must not stack it under sources. */
   .zone__cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
   }
 }
