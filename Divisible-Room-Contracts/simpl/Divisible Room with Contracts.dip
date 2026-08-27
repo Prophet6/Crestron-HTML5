@@ -1,0 +1,9 @@
+[IPTable]
+id0=C1
+addr0=127.0.0.1
+id1=E1
+addr1=127.0.0.1
+id2=E2
+addr2=127.0.0.1
+id3=E3
+addr3=127.0.0.1

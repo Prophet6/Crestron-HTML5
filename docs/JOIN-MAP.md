@@ -10,6 +10,8 @@ Join numbers are **HTML5 XPanel / TST** joins used by CrComLib (`publishEvent` /
 
 ---
 
+Name-based contract fork (no numbered joins): [Divisible-Room-Contracts](../Divisible-Room-Contracts/docs/CONTRACT-MAP.md).
+
 ## Divisible-Room
 
 Source of truth for module pins: [`Divisible-Room/simpl/Divisible Room Logic v1.0.usp`](../Divisible-Room/simpl/Divisible%20Room%20Logic%20v1.0.usp)  
