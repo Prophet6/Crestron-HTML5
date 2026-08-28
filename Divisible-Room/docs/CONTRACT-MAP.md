@@ -10,6 +10,8 @@ Rebuild with `npm run generate:contract`.
 |----------|------|-----|----------|
 | `Walls.ABOpen` | digital state | Input `ABOpen` | `Wall_AB_Open_FB` (global truth — fan to every XPanel) |
 | `Walls.BCOpen` | digital state | Input `BCOpen` | `Wall_BC_Open_FB` (global truth — fan to every XPanel) |
+| `Walls.ABEnable` | digital state | Input `ABEnable` | SIMPL enable for A\|B Combine/Divide (high = allowed) |
+| `Walls.BCEnable` | digital state | Input `BCEnable` | SIMPL enable for B\|C Combine/Divide (high = allowed) |
 | `Walls.CombineAll` | digital event | Output `CombineAll` | `Wall_Combine_All` |
 | `Walls.DivideAll` | digital event | Output `DivideAll` | `Wall_Divide_All` |
 | `Walls.ABToggle` | digital event | Output `ABToggle` | `Wall_AB_Toggle` |

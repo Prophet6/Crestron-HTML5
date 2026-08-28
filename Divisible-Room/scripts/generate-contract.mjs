@@ -36,6 +36,8 @@ const components = [
     states: [
       { name: 'ABOpen', type: 'b' },
       { name: 'BCOpen', type: 'b' },
+      { name: 'ABEnable', type: 'b' },
+      { name: 'BCEnable', type: 'b' },
     ],
     events: [
       { name: 'CombineAll', type: 'b' },

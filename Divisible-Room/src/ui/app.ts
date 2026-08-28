@@ -26,8 +26,7 @@ import {
 import {
   masterRoom,
   summarize,
-  canToggleWall,
-  wallCloseFirstHint,
+  canShowWallToggle,
   visibleWalls,
   visibleZones,
   zoneForRoom,
@@ -98,6 +97,8 @@ export function mountApp(runtime: CrestronRuntime): void {
   let holdStop: (() => void) | undefined;
   let holdTimer: number | undefined;
   let holdBtn: HTMLElement | undefined;
+  let wallAbEnable = true;
+  let wallBcEnable = true;
   const wallAbNames = [Joins.wallAB.name, 'fb1'];
   const wallBcNames = [Joins.wallBC.name, 'fb2'];
 
@@ -125,6 +126,12 @@ export function mountApp(runtime: CrestronRuntime): void {
 
   function wallFromIncomingName(name: string): WallId | undefined {
     const n = name.toLowerCase();
+    if (n.includes('abenable') || n === 'fb3') {
+      return undefined;
+    }
+    if (n.includes('bcenable') || n === 'fb4') {
+      return undefined;
+    }
     if (n.includes('abopen') || n === 'fb1' || wallAbNames.includes(name)) {
       return 'AB';
     }
@@ -137,6 +144,21 @@ export function mountApp(runtime: CrestronRuntime): void {
   function noteWallFeedback(name: string, open: boolean): void {
     if (debugEnabled) {
       must('#cip-detail').textContent = `rx ${name}=${open ? '1' : '0'}`;
+    }
+    const n = name.toLowerCase();
+    if (n.includes('abenable') || n === 'fb3' || name === Joins.wallABEnable.name) {
+      if (wallAbEnable !== open) {
+        wallAbEnable = open;
+        render();
+      }
+      return;
+    }
+    if (n.includes('bcenable') || n === 'fb4' || name === Joins.wallBCEnable.name) {
+      if (wallBcEnable !== open) {
+        wallBcEnable = open;
+        render();
+      }
+      return;
     }
     const wall = wallFromIncomingName(name);
     if (wall) {
@@ -155,6 +177,20 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     setWallFromCip('BC', asDigital(value));
+  });
+  subscribeDigital(Joins.wallABEnable, (value) => {
+    if (!linked && !asDigital(value)) {
+      return;
+    }
+    wallAbEnable = asDigital(value);
+    render();
+  });
+  subscribeDigital(Joins.wallBCEnable, (value) => {
+    if (!linked && !asDigital(value)) {
+      return;
+    }
+    wallBcEnable = asDigital(value);
+    render();
   });
   onIncomingDigital(noteWallFeedback);
   window.__ch5OnDigital = noteWallFeedback;
@@ -235,7 +271,10 @@ export function mountApp(runtime: CrestronRuntime): void {
       return;
     }
     const panel = currentPanel();
-    if (!canToggleWall(partitions, panel, wall)) {
+    if (!canShowWallToggle(partitions, panel, wall)) {
+      return;
+    }
+    if ((wall === 'AB' && !wallAbEnable) || (wall === 'BC' && !wallBcEnable)) {
       return;
     }
     pulse(wall === 'AB' ? Joins.wallABToggle : Joins.wallBCToggle);
@@ -594,28 +633,12 @@ export function mountApp(runtime: CrestronRuntime): void {
     must('#master-actions').classList.toggle('is-hidden', !masterUi);
     must('#dock-rule').textContent = masterUi
       ? 'Last sensor change, wall toggle, or Combine all / Divide all wins. A cannot join C unless B is in the same space.'
-      : partitions.wallABOpen && partitions.wallBCOpen && panel === 'A'
-        ? 'When all three are combined, close B|C before A|B so B+C are not left combined.'
-        : partitions.wallABOpen && partitions.wallBCOpen && panel === 'C'
-          ? 'When all three are combined, close A|B before B|C so A+B are not left combined.'
-          : 'Toggle any wall touching this space. Combine all / Divide all is master-only.';
+      : 'Toggle any wall touching this space when SIMPL enables it. Combine all / Divide all is master-only.';
 
     paintHeaderWall('AB', partitions.wallABOpen);
     paintHeaderWall('BC', partitions.wallBCOpen);
-    paintWall(
-      'AB',
-      partitions.wallABOpen,
-      shownWalls.has('AB'),
-      canToggleWall(partitions, panel, 'AB'),
-      wallCloseFirstHint(panel, 'AB'),
-    );
-    paintWall(
-      'BC',
-      partitions.wallBCOpen,
-      shownWalls.has('BC'),
-      canToggleWall(partitions, panel, 'BC'),
-      wallCloseFirstHint(panel, 'BC'),
-    );
+    paintWall('AB', partitions.wallABOpen, shownWalls.has('AB'), wallAbEnable);
+    paintWall('BC', partitions.wallBCOpen, shownWalls.has('BC'), wallBcEnable);
 
     if (key !== mountedKey) {
       mountZoneCards(zones);
@@ -638,7 +661,7 @@ function paintHeaderWall(wall: WallId, open: boolean): void {
   must(`[data-header-wall-state="${wall}"]`).textContent = open ? 'Open' : 'Closed';
 }
 
-function paintWall(wall: WallId, open: boolean, controllable: boolean, enabled: boolean, closeHint: string): void {
+function paintWall(wall: WallId, open: boolean, controllable: boolean, enabled: boolean): void {
   const el = must(`.wall[data-wall="${wall}"]`);
   el.classList.toggle('is-open', open);
   el.classList.remove('is-hidden');
@@ -648,7 +671,6 @@ function paintWall(wall: WallId, open: boolean, controllable: boolean, enabled: 
     btn.hidden = !controllable;
     btn.textContent = open ? 'Divide' : 'Combine';
     btn.disabled = !enabled;
-    btn.title = enabled || !open ? '' : closeHint;
   }
 }
 

@@ -114,34 +114,7 @@ export function visibleWalls(state: PartitionState, panel: PanelId): WallId[] {
   return walls;
 }
 
-/**
- * A room must not orphan a combined pair it is leaving.
- * A+B+C: Room A must close B|C before A|B (else B+C stay combined).
- * Room C must close A|B before B|C (else A+B stay combined).
- * Master and Room B may close either. Opening a visible wall is always allowed.
- */
-export function canToggleWall(state: PartitionState, panel: PanelId, wall: WallId): boolean {
-  if (!visibleWalls(state, panel).includes(wall)) {
-    return false;
-  }
-  if (panel === 'master' || panel === 'B') {
-    return true;
-  }
-  if (panel === 'A' && wall === 'AB' && state.wallABOpen && state.wallBCOpen) {
-    return false;
-  }
-  if (panel === 'C' && wall === 'BC' && state.wallBCOpen && state.wallABOpen) {
-    return false;
-  }
-  return true;
-}
-
-export function wallCloseFirstHint(panel: PanelId, wall: WallId): string {
-  if (panel === 'C' && wall === 'BC') {
-    return 'Close A | B first';
-  }
-  if (panel === 'A' && wall === 'AB') {
-    return 'Close B | C first';
-  }
-  return '';
+/** Toggle is shown for walls in this panel's zone. Enable comes from SIMPL (`Walls.ABEnable` / `Walls.BCEnable`). */
+export function canShowWallToggle(state: PartitionState, panel: PanelId, wall: WallId): boolean {
+  return visibleWalls(state, panel).includes(wall);
 }

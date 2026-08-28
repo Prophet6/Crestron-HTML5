@@ -1,6 +1,6 @@
 {
 	"name": "DivisibleRoom",
-	"timestamp": "2026-08-27 22:22:09.784",
+	"timestamp": "2026-08-28 01:17:05.851",
 	"version": "1.0.0.0",
 	"schema_version": 1,
 	"extra_value": "Divisible-Room name-based CH5 contract",
@@ -9,7 +9,9 @@
 			"boolean": {
 				"1": {
 					"1": "Walls.ABOpen",
-					"2": "Walls.BCOpen"
+					"2": "Walls.BCOpen",
+					"3": "Walls.ABEnable",
+					"4": "Walls.BCEnable"
 				},
 				"2": {
 					"1": "Identity.MasterMode"

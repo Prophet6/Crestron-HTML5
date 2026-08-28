@@ -19,6 +19,8 @@ function s(name: string): SerialJoin {
 export const Joins = {
   wallAB: b('Walls.ABOpen'),
   wallBC: b('Walls.BCOpen'),
+  wallABEnable: b('Walls.ABEnable'),
+  wallBCEnable: b('Walls.BCEnable'),
   combineAll: b('Walls.CombineAll'),
   divideAll: b('Walls.DivideAll'),
   wallABToggle: b('Walls.ABToggle'),
