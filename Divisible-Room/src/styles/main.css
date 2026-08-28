@@ -90,14 +90,31 @@ input {
 }
 
 .rail__partition {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   width: 100%;
   min-height: var(--touch);
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.2;
   text-align: center;
   white-space: normal;
+}
+
+.rail__partition-label {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.rail__partition-status {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--muted);
 }
 
 .rail__partition.is-selected {
@@ -293,6 +310,10 @@ input {
   min-height: 0;
 }
 
+.zones[data-count='1'] .zone__cards {
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .zones[data-count='2'] .zone__cards,
 .zones[data-count='3'] .zone__cards {
   grid-template-rows: minmax(0, 1fr) auto;
@@ -309,6 +330,7 @@ input {
 
 .card--av {
   overflow: hidden;
+  min-height: 0;
 }
 
 .card--vol {
@@ -401,6 +423,7 @@ input {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .vol-row .btn--hold {
@@ -418,11 +441,8 @@ input {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   min-height: 0;
-  padding: 28px 32px;
+  padding: 20px 32px 16px;
   text-align: center;
   border: 1px dashed var(--line);
   border-radius: 12px;
@@ -430,11 +450,18 @@ input {
 }
 
 .source-page.is-active {
-  align-items: stretch;
-  justify-content: flex-start;
-  text-align: left;
   border-style: solid;
   border-color: rgba(61, 156, 240, 0.35);
+}
+
+.source-page__copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 0;
 }
 
 .source-page h3 {
@@ -445,21 +472,12 @@ input {
   line-height: 1.15;
 }
 
-.source-page.is-active h3 {
-  font-size: 32px;
-}
-
 .source-page p {
   margin: 0;
   max-width: 36em;
   color: var(--muted);
   font-size: 20px;
   line-height: 1.45;
-}
-
-.source-page.is-active p {
-  max-width: none;
-  font-size: 18px;
 }
 
 .source-page__kicker {
@@ -470,19 +488,18 @@ input {
 
 .source-page__controls {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: stretch;
   gap: 10px;
-  margin-top: auto;
   width: 100%;
-}
-
-.source-page__controls:empty {
-  display: none;
+  min-height: var(--touch);
+  flex: 0 0 auto;
+  margin-top: 12px;
 }
 
 .source-page__controls .btn {
   flex: 1;
-  min-height: 72px;
+  min-height: var(--touch);
   padding: 0 16px;
 }
 
@@ -655,5 +672,9 @@ input[type='range'] {
   .rail__partition {
     font-size: 15px;
     min-height: 56px;
+  }
+
+  .rail__partition-status {
+    font-size: 10px;
   }
 }

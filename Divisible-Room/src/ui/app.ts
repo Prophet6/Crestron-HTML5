@@ -290,10 +290,11 @@ export function mountApp(runtime: CrestronRuntime): void {
   must('[data-action="close-partitions"]').addEventListener('click', closePartitions);
 
   const zonesEl = must('#zones');
+  const workspaceEl = must('.workspace');
 
-  zonesEl.addEventListener('click', (event) => {
+  workspaceEl.addEventListener('click', (event) => {
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-source], [data-mute], [data-power]');
-    if (!target || !zonesEl.contains(target)) {
+    if (!target || !workspaceEl.contains(target)) {
       return;
     }
     const room = roomFrom(target);
@@ -327,20 +328,20 @@ export function mountApp(runtime: CrestronRuntime): void {
     }
   });
 
-  zonesEl.addEventListener('input', (event) => {
+  workspaceEl.addEventListener('input', (event) => {
     const el = event.target;
     if (!(el instanceof HTMLInputElement) || !el.hasAttribute('data-vol')) {
       return;
     }
     const room = roomFrom(el);
     rooms[room].volume = Number(el.value);
-    const label = el.closest('.zone')?.querySelector('[data-vol-label]');
+    const label = el.closest('.card--vol')?.querySelector('[data-vol-label]');
     if (label) {
       label.textContent = `${rooms[room].volume}%`;
     }
   });
 
-  zonesEl.addEventListener('change', (event) => {
+  workspaceEl.addEventListener('change', (event) => {
     const el = event.target;
     if (!(el instanceof HTMLInputElement) || !el.hasAttribute('data-vol')) {
       return;
@@ -348,9 +349,9 @@ export function mountApp(runtime: CrestronRuntime): void {
     setZoneVolume(roomFrom(el), Number(el.value));
   });
 
-  zonesEl.addEventListener('pointerdown', (event) => {
+  workspaceEl.addEventListener('pointerdown', (event) => {
     const btn = (event.target as HTMLElement).closest<HTMLElement>('[data-vol-up], [data-vol-down]');
-    if (!btn) {
+    if (!btn || !workspaceEl.contains(btn)) {
       return;
     }
     event.preventDefault();
@@ -359,8 +360,8 @@ export function mountApp(runtime: CrestronRuntime): void {
     btn.setPointerCapture(event.pointerId);
     startHold(room, delta, btn);
   });
-  zonesEl.addEventListener('pointerup', stopHold);
-  zonesEl.addEventListener('pointercancel', stopHold);
+  window.addEventListener('pointerup', stopHold);
+  window.addEventListener('pointercancel', stopHold);
 
   must('[data-action="confirm-power"]').addEventListener('click', () => {
     pulse(Joins.powerConfirm.confirm);
@@ -577,8 +578,9 @@ export function mountApp(runtime: CrestronRuntime): void {
       zonesEl.appendChild(node);
     }
     if (zones.length === 1) {
-      const volume = zonesEl.querySelector('.card--vol');
+      const volume = zonesEl.querySelector<HTMLElement>('.card--vol');
       if (volume) {
+        volume.dataset.room = commandRoom(zones[0]);
         must('#rail-vol').appendChild(volume);
       }
     }
@@ -600,7 +602,8 @@ export function mountApp(runtime: CrestronRuntime): void {
     card.querySelectorAll<HTMLElement>('[data-source]').forEach((btn) => {
       btn.classList.toggle('is-selected', Number(btn.dataset.source) === ui.source);
     });
-    const volHost = card.querySelector('.card--vol') ?? must('#rail-vol');
+    const volHost = card.querySelector<HTMLElement>('.card--vol') ?? must('#rail-vol');
+    volHost.dataset.room = command;
     const slider = within<HTMLInputElement>(volHost, '[data-vol]');
     if (document.activeElement !== slider) {
       slider.value = String(ui.volume);
@@ -627,7 +630,7 @@ export function mountApp(runtime: CrestronRuntime): void {
     must('#app').classList.toggle('is-master', masterUi);
     must('#app').classList.toggle('is-satellite', !masterUi);
     must('#panel-role').textContent = masterUi ? 'Master panel' : `Room ${homeRoom} panel`;
-    must('#config-label').textContent = summarize(partitions);
+    must('#config-status').textContent = summarize(partitions);
     must('#partition-summary').textContent = summarize(partitions);
     must('#master-actions').hidden = !masterUi;
     must('#master-actions').classList.toggle('is-hidden', !masterUi);

@@ -62,7 +62,8 @@
             aria-expanded="false"
             aria-controls="partition-page"
           >
-            Three independent rooms
+            <span class="rail__partition-label">Partition</span>
+            <span class="rail__partition-status" id="config-status">Three independent rooms</span>
           </button>
           <div class="rail__walls" aria-label="Wall state">
             <span class="header-wall" data-header-wall="AB">
@@ -140,9 +141,11 @@
               <button type="button" class="btn" data-source="3">HDMI</button>
             </div>
             <div class="source-page">
-              <p class="source-page__kicker" data-source-kicker>No source</p>
-              <h3 data-source-title>Choose a source</h3>
-              <p data-source-body>This space is idle.</p>
+              <div class="source-page__copy">
+                <p class="source-page__kicker" data-source-kicker>No source</p>
+                <h3 data-source-title>Choose a source</h3>
+                <p data-source-body>This space is idle.</p>
+              </div>
               <div class="source-page__controls" data-source-controls></div>
             </div>
           </section>
@@ -150,8 +153,7 @@
             <div class="vol-stack">
               <p class="vol-readout"><strong data-vol-label>0%</strong></p>
               <label class="slider-block">
-                <span>Level</span>
-                <input data-vol type="range" min="0" max="100" value="0" />
+                <input data-vol type="range" min="0" max="100" value="0" aria-label="Volume" />
               </label>
               <div class="vol-row">
                 <button type="button" class="btn btn--hold" data-vol-down>−</button>
