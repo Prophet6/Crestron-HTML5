@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crestron programming notes — SIMPL+, Simpl#, CH5</title>
+    <meta
+      name="description"
+      content="Field notes on Crestron SIMPL+, Simpl#, and custom CH5 HTML5 panels: tools, compile pipelines, hard rules, and enough detail for a programmer or another AI to start immediately."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f14;
+        --bg-elev: #141b24;
+        --bg-elev-2: #1c2530;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f4f7fb;
+        --muted: #9aa8b8;
+        --accent: #3d9cf0;
+        --ok: #3ecf8e;
+        --warn: #e0b445;
+        --danger: #e25555;
+        --radius: 16px;
+        --max: 1080px;
+        --nav: 260px;
+        font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(1000px 420px at 8% -10%, rgba(61, 156, 240, 0.16), transparent 60%),
+          radial-gradient(900px 400px at 100% 0%, rgba(62, 207, 142, 0.08), transparent 55%),
+          var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .wrap {
+        display: grid;
+        grid-template-columns: var(--nav) minmax(0, 1fr);
+        gap: 28px;
+        max-width: calc(var(--max) + var(--nav) + 28px);
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+      }
+
+      nav {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+        max-height: calc(100vh - 40px);
+        overflow: auto;
+        padding: 16px;
+        background: var(--bg-elev);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+
+      nav p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      nav a {
+        display: block;
+        color: var(--text);
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      nav a:hover {
+        background: var(--bg-elev-2);
+        text-decoration: none;
+      }
+
+      nav a.sub { padding-left: 18px; color: var(--muted); font-size: 13px; }
+
+      header.hero {
+        padding: 28px 32px;
+        background: var(--bg-elev);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        margin-bottom: 28px;
+      }
+
+      .kicker {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 40px;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin: 48px 0 12px;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+      }
+
+      h3 {
+        margin: 28px 0 8px;
+        font-size: 20px;
+      }
+
+      p { margin: 0 0 14px; color: var(--text); }
+      .lede { font-size: 18px; color: var(--muted); max-width: 46em; }
+
+      section.card {
+        background: var(--bg-elev);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px 24px;
+        margin: 16px 0;
+      }
+
+      .layers {
+        display: grid;
+        gap: 8px;
+        margin: 16px 0 8px;
+      }
+
+      .layer {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--bg-elev-2);
+        border: 1px solid var(--line);
+      }
+
+      .layer strong { color: var(--accent); }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin: 12px 0 18px;
+      }
+
+      th, td {
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      th { color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      code, kbd {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      :not(pre) > code {
+        background: var(--bg-elev-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 1px 6px;
+      }
+
+      pre {
+        overflow: auto;
+        background: #0a0e13;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      pre code { background: none; border: 0; padding: 0; }
+
+      .callout {
+        border-left: 3px solid var(--accent);
+        background: rgba(61, 156, 240, 0.08);
+        padding: 12px 14px;
+        border-radius: 0 12px 12px 0;
+        margin: 14px 0;
+      }
+
+      .callout.warn { border-left-color: var(--warn); background: rgba(224, 180, 69, 0.1); }
+      .callout.danger { border-left-color: var(--danger); background: rgba(226, 85, 85, 0.1); }
+      .callout.ok { border-left-color: var(--ok); background: rgba(62, 207, 142, 0.1); }
+
+      .callout p:last-child { margin-bottom: 0; }
+
+      ul, ol { margin: 0 0 14px; padding-left: 1.3em; }
+      li { margin: 0 0 6px; }
+
+      .meta { color: var(--muted); font-size: 14px; }
+
+      footer {
+        margin-top: 48px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 960px) {
+        .wrap { grid-template-columns: 1fr; padding: 16px 14px 60px; }
+        nav { position: static; max-height: none; }
+        h1 { font-size: 30px; }
+        .layer { grid-template-columns: 1fr; }
+      }
+
+      @media print {
+        body { background: #fff; color: #111; }
+        nav { display: none; }
+        .wrap { display: block; max-width: none; }
+        .card, header.hero, pre { break-inside: avoid; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav aria-label="Contents">
+        <p>Contents</p>
+        <a href="#picture">The big picture</a>
+        <a href="#signals">Signals</a>
+        <a href="#simpl-windows">SIMPL Windows</a>
+        <a href="#simpl-plus">SIMPL+</a>
+        <a class="sub" href="#plus-grid">Symbol grid</a>
+        <a class="sub" href="#plus-types">Types and events</a>
+        <a class="sub" href="#plus-compile">Compile SIMPL+</a>
+        <a href="#simpl-sharp">Simpl#</a>
+        <a class="sub" href="#sharp-bridge">Talking to SIMPL+</a>
+        <a class="sub" href="#sharp-compile">Compile Simpl#</a>
+        <a href="#ch5">CH5 / HTML5</a>
+        <a class="sub" href="#ch5-contracts">Contracts vs joins</a>
+        <a class="sub" href="#ch5-compile">Build and deploy</a>
+        <a href="#together">Using them together</a>
+        <a href="#lab">This lab</a>
+        <a href="#ai">Start here (AI)</a>
+        <a href="#glossary">Glossary</a>
+      </nav>
+
+      <main>
+        <header class="hero">
+          <p class="kicker">Field notes · Prophet6 / Crestron-HTML5</p>
+          <h1>Crestron programming, as learned so far</h1>
+          <p class="lede">
+            A Crestron system is a control processor plus touch panels. The processor
+            runs a compiled program. The panel is either a native Crestron touchscreen
+            or a web page that speaks the same control protocol. This note covers the
+            three languages used in this catalog — <strong>SIMPL+</strong>,
+            <strong>Simpl#</strong>, and <strong>CH5</strong> — in semi-technical
+            language, with enough concrete rules that another person or AI can start
+            work without rediscovering the landmines.
+          </p>
+          <p class="meta">
+            Last updated 27 August 2026. Public repo:
+            <a href="https://github.com/Prophet6/Crestron-HTML5">Prophet6/Crestron-HTML5</a>.
+            Companion modules:
+            <a href="https://github.com/Prophet6/Crestron-Modules">Prophet6/Crestron-Modules</a>.
+            Not affiliated with Crestron Electronics.
+          </p>
+        </header>
+
+        <h2 id="picture">The big picture</h2>
+        <p>
+          Think of a Crestron job as three jobs that meet in the middle. Someone has
+          to decide <em>what happens</em> when a button is pressed (room logic).
+          Someone has to talk to hard devices (displays, DSPs, matrix switchers)
+          over TCP or serial. Someone has to draw the buttons a person actually
+          touches. Those three jobs are SIMPL+ / SIMPL Windows, Simpl#, and CH5.
+        </p>
+
+        <div class="layers">
+          <div class="layer"><strong>CH5</strong><span>The touch UI. A web app packaged as <code>.ch5z</code>. It does not run the building; it only sends and receives signals.</span></div>
+          <div class="layer"><strong>CIP / IP-ID</strong><span>The phone line. Each panel has an address (IP-ID) on the processor. Digital, analog, and serial signals travel this path.</span></div>
+          <div class="layer"><strong>SIMPL Windows</strong><span>The patchbay. You drag symbols onto a sheet and draw wires between pins. This is the program that loads onto the processor as <code>.lpz</code>.</span></div>
+          <div class="layer"><strong>SIMPL+</strong><span>Custom symbols on that sheet. Event-driven modules with named pins. Good for room logic, interlocks, feedback.</span></div>
+          <div class="layer"><strong>Simpl#</strong><span>A C# library the SIMPL+ module can call. Use it for sockets, parsing, threading — work SIMPL+ is awkward at.</span></div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <strong>Mental model:</strong> the panel is a remote control. The processor
+            is the brain. SIMPL Windows is how you plug the remote into the brain.
+            SIMPL+ is a custom brain module. Simpl# is a library that module can load.
+            CH5 is how you draw a modern remote without Crestron’s visual UI builder
+            (Construct).
+          </p>
+        </div>
+
+        <section class="card">
+          <h3>What lives where</h3>
+          <table>
+            <thead>
+              <tr><th>Thing</th><th>Runs on</th><th>Source</th><th>Shipped as</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Room logic, wall sensors, identity</td><td>4-Series processor (this lab: RMC4)</td><td><code>.usp</code> SIMPL+ plus <code>.smw</code> wiring</td><td><code>.lpz</code> program</td></tr>
+              <tr><td>TCP / protocol engines</td><td>Same processor, inside the SIMPL+ module</td><td><code>.cs</code> Simpl# → <code>.clz</code></td><td>Embedded in the <code>.lpz</code></td></tr>
+              <tr><td>Touch UI</td><td>TST-1080, or a browser talking to the processor</td><td>TypeScript + CSS + CrComLib</td><td><code>.ch5z</code> web archive</td></tr>
+            </tbody>
+          </table>
+          <p>
+            You almost always ship <em>two</em> things: a processor program and a
+            panel package. Changing the UI does not change the program unless the
+            signal names or join numbers changed. Changing SIMPL+ pin order
+            <em>does</em> break existing wires on the sheet — treat pin order as a
+            public API.
+          </p>
+        </section>
+
+        <h2 id="signals">Signals — the common language</h2>
+        <p>
+          Every layer speaks three kinds of signal. Learn these first; everything
+          else is routing them.
+        </p>
+        <table>
+          <thead>
+            <tr><th>Kind</th><th>What it is</th><th>Typical use</th><th>Range / notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Digital</strong></td><td>On or off</td><td>Button press, mute, “wall is open”</td><td>A <em>pulse</em> is a short high. A <em>held</em> signal stays high. Feedback (FB) is usually held.</td></tr>
+            <tr><td><strong>Analog</strong></td><td>A number</td><td>Volume, source index, countdown</td><td>Crestron analog is <code>0–65535</code>. Percent UIs map 0–100 ↔ that range.</td></tr>
+            <tr><td><strong>Serial</strong></td><td>Text</td><td>Room name, countdown string</td><td>SIMPL+ native strings use a <code>$</code> suffix (<code>Status$</code>).</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Direction matters. A press travels <strong>panel → program</strong>.
+          Feedback travels <strong>program → panel</strong>. In CH5 contracts the
+          names are “events” (panel pressed something) and “states” (program is
+          telling the panel the current value). In the CHD extender file those
+          labels are easy to get backwards — see <a href="#ch5-contracts">Contracts</a>.
+        </p>
+
+        <h2 id="simpl-windows">SIMPL Windows — the patchbay</h2>
+        <p>
+          SIMPL Windows is Crestron’s graphical programming environment. You do
+          not write a main() for the whole job. You drop symbols (factory modules
+          and your own SIMPL+ symbols) onto a sheet and connect pins with wires.
+          The compiled result is a program the processor runs.
+        </p>
+        <ul>
+          <li><strong>Tool:</strong> SIMPL Windows (Crestron installer). File type <code>.smw</code>.</li>
+          <li><strong>Compile:</strong> F12 / Build. Output is <code>.lpz</code> (plus <code>.sig</code> / <code>.sm2</code> sidecars).</li>
+          <li><strong>Load:</strong> Crestron Toolbox → the processor. The lab program for Divisible-Room lives in <code>Divisible-Room/simpl/</code>.</li>
+          <li><strong>Do not commit:</strong> <code>.ASV</code> autosaves, <code>SPlsWork/</code> generated glue, <code>*_compiled.zip</code>.</li>
+        </ul>
+        <p>
+          HTML5 XPanels are symbols on this sheet too. Each one has an
+          <strong>IP-ID</strong> (this lab: room panels <code>E1</code>/<code>E2</code>/<code>E3</code>,
+          master <code>C1</code>). After you attach a <code>.chd</code> contract, that
+          XPanel grows named extender pins instead of (or in addition to) numbered joins.
+        </p>
+        <div class="callout warn">
+          <p>
+            <strong>Fan vs one-instance.</strong> Feedback that every panel must
+            show (wall open/closed) is <em>fanned</em>: one Logic output wire
+            split to every XPanel. Identity and Power Shutdown Confirmation are
+            <em>one instance per panel</em> — do not fan a single Identity to E1,
+            E2, and E3.
+          </p>
+        </div>
+
+        <h2 id="simpl-plus">SIMPL+</h2>
+        <p>
+          SIMPL+ is Crestron’s module language. It looks a bit like a simplified
+          C. A <code>.usp</code> file declares pins, then reacts when those pins
+          change. After compile, SIMPL Windows shows it as a rectangle with rows
+          of inputs on the left and outputs on the right.
+        </p>
+        <p>
+          Use SIMPL+ for: room combination rules, last-wins overrides, mapping
+          source buttons to analog values, identity (“this panel is Room B”),
+          and wrapping a Simpl# library so the sheet can talk to it.
+        </p>
+
+        <h3 id="plus-grid">The symbol is a three-column grid</h3>
+        <p>
+          This is the most important Crestron-ism in the whole note. The symbol
+          is not two independent lists. It is a spreadsheet:
+        </p>
+        <pre><code>Input  |  Parameter  |  Output</code></pre>
+        <p>
+          Related signals share a <em>row</em> so a human can see
+          <code>A_Laptop</code> across from <code>A_Laptop_FB</code>. Empty cells
+          are filled with <code>_SKIP_</code>. That skip is not dead code. It
+          pads the list so the next real pin lands on the intended row.
+        </p>
+        <ul>
+          <li>Declare digital in/out <strong>before</strong> analog or serial.</li>
+          <li>If digital input count ≠ digital output count, analog pairs drift to the wrong rows. Pad the shorter digital list with <code>_SKIP_</code> until the counts match.</li>
+          <li>Group similar signals. Put a skip between dissimilar groups (analog source FB vs serial room names).</li>
+          <li>Trailing <code>_SKIP_</code> with nothing after it does not create a pin. Skips only matter <em>before</em> a real signal.</li>
+          <li><strong>Do not restack I/O</strong> to look neat unless the user asked, or you are restoring this alignment. Pin order is the public API of the symbol.</li>
+        </ul>
+        <p>Canonical example — Divisible Room Logic wall block (user order; do not restack):</p>
+        <pre><code>DIGITAL_INPUT  Wall_AB_Sense, Wall_BC_Sense,
+               _SKIP_,
+               Wall_Combine_All, Wall_Divide_All,
+               Wall_AB_Toggle, Wall_BC_Toggle,
+               _SKIP_,
+               A_Power, A_Mute, …          /* then B, C, then vol ± */
+
+DIGITAL_OUTPUT Wall_AB_Open_FB, Wall_BC_Open_FB,
+               _SKIP_,
+               _SKIP_, _SKIP_, _SKIP_, _SKIP_,   /* no FB for combine/divide/toggles */
+               _SKIP_,
+               A_Power_FB, A_Mute_FB, …</code></pre>
+
+        <h3>Parameters</h3>
+        <p>
+          Parameters are compile-time settings on the symbol (dropdowns, numbers).
+          They have no <code>CHANGE</code> event. If you need a runtime override,
+          add an analog input and treat parameter as the default.
+        </p>
+        <div class="callout danger">
+          <p>
+            <strong>Never <code>#DEFAULT_ARG</code>.</strong> On SPlus 4.06 / SPlusCC
+            it is Error 1100 (statement outside function). Use
+            <code>#BEGIN_PARAMETER_PROPERTIES</code> with <code>propDefaultValue = 0d</code>
+            and a <code>propList</code> for dropdowns. Integer literals in that block
+            take a <code>d</code> suffix. Canonical: <code>Divisible Room Identity.usp</code>.
+          </p>
+        </div>
+        <pre><code>INTEGER_PARAMETER Panel_Role;
+
+#BEGIN_PARAMETER_PROPERTIES Panel_Role
+    propValidUnits =        unitDecimal;
+    propDefaultUnit =       unitDecimal;
+    propDefaultValue =      0d;
+    propList =              {0d, "Master Panel"},
+                            {1d, "Room A"},
+                            {2d, "Room B"},
+                            {3d, "Room C"};
+    propShortDescription =  "Select which room this panel should control";
+#END_PARAMETER_PROPERTIES</code></pre>
+
+        <h3 id="plus-types">Types, comments, and events</h3>
+        <table>
+          <thead><tr><th>Topic</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td>Native strings</td><td><code>STRING x$[64];</code> and <code>Status$</code>. The <code>$</code> is only for native SIMPL+ strings.</td></tr>
+            <tr><td>Simpl# strings</td><td><code>SimplSharpString msg</code> — <strong>no</strong> <code>$</code>.</td></tr>
+            <tr><td>No <code>ushort</code></td><td>C# <code>ushort</code> in a callback is SIMPL+ <code>INTEGER</code>.</td></tr>
+            <tr><td>No C-style not</td><td><code>If (value = 0)</code>, never <code>If (!value)</code>.</td></tr>
+            <tr><td>Comments in logic</td><td>Inside <code>Function</code> / <code>CHANGE</code> / <code>PUSH</code> / <code>CALLBACK</code> bodies: <code>/* */</code> only. <code>//</code> there is Error 1100. Headers and parameter-property blocks may use <code>//</code>.</td></tr>
+            <tr><td>Line endings</td><td><strong>CRLF required</strong> on every <code>.usp</code>. LF-only is Error 1700 (EOF at line 1). Normalize after every AI edit.</td></tr>
+          </tbody>
+        </table>
+        <p>Typical event handlers:</p>
+        <ul>
+          <li><code>PUSH pin</code> — rising edge (a press).</li>
+          <li><code>RELEASE pin</code> — falling edge.</li>
+          <li><code>CHANGE pin</code> — analog or serial changed.</li>
+          <li><code>FUNCTION Main()</code> — startup. End with <code>WaitForInitializationComplete()</code> when talking to Simpl#.</li>
+        </ul>
+
+        <h3 id="plus-compile">How SIMPL+ gets compiled</h3>
+        <p>
+          The compiler is <code>C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe</code>.
+          Do not stop at “0 errors in the SIMPL Windows editor.” Linking still has
+          to generate glue under <code>SPlsWork\</code>.
+        </p>
+        <pre><code>&amp; "C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe" `
+    \rebuild "C:\full\path\Divisible Room Logic v1.0.usp" `
+    \target series4</code></pre>
+        <table>
+          <thead><tr><th>Step</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td>SIMPL+ compile</td><td>Syntax check of the <code>.usp</code>. Zero errors ≠ done.</td></tr>
+            <tr><td>Library compile</td><td>Links any Simpl# <code>.clz</code> for the requested series.</td></tr>
+            <tr><td>Cross-compile / link</td><td>Writes <code>SPlsWork\*.cs</code> and <code>*.dll</code>. Read this if the link fails.</td></tr>
+            <tr><td>Symbol update</td><td>Refreshes the <code>.ush</code> that SIMPL Windows shows on the sheet.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Target: this lab is 4-Series, so <code>\target series4</code>. A Simpl#
+          library built with the modern NuGet SDK is <strong>4-Series only</strong>.
+          A VS2008 / Windows CE library can be <code>series3 series4</code>.
+          Compile one <code>.usp</code> at a time if a batch drop the glue DLL.
+        </p>
+        <p>Success looks like: <code>.ush</code> next to the <code>.usp</code>, plus <code>SPlsWork\&lt;Module&gt;.dll</code>. Then compile the <code>.smw</code> and load the <code>.lpz</code>.</p>
+
+        <h2 id="simpl-sharp">Simpl#</h2>
+        <p>
+          Simpl# is C# that runs on the processor, in a sandbox closer to .NET
+          Compact Framework than to modern .NET. Use it when SIMPL+ would become
+          a pile of string parsing and socket retries — device protocols, Telnet,
+          shared connection state used by several modules.
+        </p>
+        <p>
+          Typical split: <strong>one Simpl# core</strong> owns the TCP connection
+          and raises callbacks. <strong>Several SIMPL+ satellites</strong> subscribe
+          to that same core (router, serial, UI feedback) instead of each opening
+          their own socket.
+        </p>
+        <ul>
+          <li><strong>APIs:</strong> <code>Crestron.SimplSharp</code>, <code>Crestron.SimplSharp.CrestronSockets</code> (<code>TCPClient</code>, <code>CTimer</code>, <code>CMutex</code>, <code>SimplSharpString</code>, <code>ErrorLog</code>).</li>
+          <li><strong>Avoid:</strong> LINQ, async/await, <code>HttpClient</code>, full .NET HTTP stacks.</li>
+          <li><strong>Line endings:</strong> <code>.cs</code> must be <strong>CRLF</strong>. LF-only files fail the Crestron C# toolchain even when the code is correct. UTF-8 with BOM is safe.</li>
+        </ul>
+
+        <h3 id="sharp-bridge">How SIMPL+ calls Simpl#</h3>
+        <pre><code>#USER_SIMPLSHARP_LIBRARY "Arranger_v1"
+ArrangerCore Core;</code></pre>
+        <p>
+          That declaration makes the cross-compiler emit
+          <code>CORE = new …ArrangerCore();</code> in generated glue. Therefore
+          the C# class <strong>must have a public parameterless constructor</strong>,
+          even if you intend a singleton.
+        </p>
+        <div class="callout">
+          <p>
+            <strong>Singleton rule.</strong> The first public constructor must set
+            <code>_instance = this</code>. The module that owns Connect/Disconnect
+            lets auto-<code>new</code> run. Satellite modules rebind in
+            <code>Main()</code>: <code>Core = ArrangerCore.Instance;</code> before
+            <code>RegisterDelegate</code>. If you skip this, each module gets its
+            own TCP client and they never see each other’s traffic.
+          </p>
+        </div>
+        <table>
+          <thead><tr><th>Mechanism</th><th>SIMPL+ call</th><th>C# side</th></tr></thead>
+          <tbody>
+            <tr><td>Events</td><td><code>RegisterEvent(obj, EventName, HANDLER)</code></td><td><code>event EventHandler&lt;…&gt;</code></td></tr>
+            <tr><td>Delegates</td><td><code>RegisterDelegate(obj, PropertyName, CALLBACK)</code></td><td>A <code>delegate</code> exposed as a <strong>property</strong></td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li><code>RegisterDelegate</code> 2nd argument is the <strong>property name</strong> (<code>OnLineReceived</code>), not the delegate type name.</li>
+          <li>3rd argument must be a <code>CALLBACK FUNCTION</code>, not an ordinary <code>Function</code>.</li>
+          <li>Do not use <code>+=</code> on Simpl# delegates from SIMPL+.</li>
+          <li>If several modules register on one instance, Simpl# must <em>append</em> handlers, not replace them.</li>
+        </ul>
+        <p>TCP receive loops: always re-arm <code>ReceiveDataAsync</code> while connected, including when <code>bytesReceived &lt;= 0</code>. Never empty <code>catch { }</code> — log with <code>ErrorLog.Error</code>.</p>
+
+        <h3 id="sharp-compile">How Simpl# gets compiled</h3>
+        <table>
+          <thead><tr><th>Path</th><th>When</th><th>Output</th><th>SPlusCC target</th></tr></thead>
+          <tbody>
+            <tr><td>Visual Studio 2008 + Simpl# plugin, Windows CE / .NET CF 3.5</td><td>Older 3-Series-friendly libraries</td><td><code>.clz</code> (zip of DLLs)</td><td><code>series3 series4</code></td></tr>
+            <tr><td>NuGet <code>Crestron.SimplSharp.SDK.Library</code> (net48)</td><td>Modern 4-Series libraries</td><td><code>.clz</code></td><td><strong><code>series4</code> only</strong></td></tr>
+          </tbody>
+        </table>
+        <p>
+          Rebuild the <code>.clz</code> first, put it next to the <code>.usp</code>
+          (or in the user SIMPL+ folder), then <code>SPlusCC \rebuild</code> every
+          dependent module. A net48 CLZ targeted at 3-Series reports
+          “The archive does not contain a valid SIMPL# assembly.”
+        </p>
+        <p>If SIMPL+ shows 0 errors but the link fails, open <code>SPlsWork\&lt;module&gt;.cs</code> and look at <code>LogosSimplSharpInitialize()</code> — that is the real error.</p>
+
+        <h2 id="ch5">CH5 / HTML5</h2>
+        <p>
+          CH5 is Crestron’s name for HTML5 user interfaces. Construct is Crestron’s
+          visual builder that <em>emits</em> CH5. This catalog does <strong>not</strong>
+          use Construct. A <code>.ch5z</code> is just a zip of a web app. We write
+          that web app by hand: vanilla TypeScript, Vite, CrComLib.
+        </p>
+        <p>
+          CrComLib is the JavaScript library that publishes and subscribes signals.
+          On a TST-1080 the panel’s native stack carries CIP. In Chrome,
+          <strong>WebXPanel</strong> opens a WebSocket to the processor and pretends
+          to be a panel. Same UI package, two transports.
+        </p>
+
+        <section class="card">
+          <h3>Tools for CH5 in this repo</h3>
+          <table>
+            <thead><tr><th>Tool</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td>Node.js 24+ / npm 11+</td><td>Crestron CH5 2.19 documents 24.18 / 11.16</td></tr>
+              <tr><td>Vite</td><td>Dev server and production bundle. Hello-World is port 5173; Divisible-Room is 5174</td></tr>
+              <tr><td><code>@crestron/ch5-crcomlib</code></td><td>Runtime: <code>publishEvent</code> / <code>subscribeState</code></td></tr>
+              <tr><td><code>@crestron/ch5-webxpanel</code></td><td>Browser CIP to a 4-Series processor</td></tr>
+              <tr><td><code>@crestron/ch5-utilities-cli</code> 2.19.0</td><td><code>ch5-cli archive</code> and <code>ch5-cli deploy</code></td></tr>
+              <tr><td>TypeScript</td><td>Join maps and UI logic. No Construct widgets unless a hardware component later needs <code>&lt;ch5-button&gt;</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <h3>Talking to the processor from JavaScript</h3>
+        <p>CrComLib types: <code>b</code> digital, <code>n</code> analog, <code>s</code> serial, <code>o</code> object. Names are always strings.</p>
+        <pre><code>pulse(Joins.wallABToggle);                 // digital press
+publishAnalog(RoomJoins.A.volume, 32768);  // analog
+subscribeDigital(Joins.wallAB, (v) =&gt; { … });</code></pre>
+        <p>
+          In this catalog, UI code never hardcodes <code>"21"</code>. Named maps
+          live in <code>src/crestron/joins.ts</code>. Hello-World still uses
+          numbered joins. Divisible-Room uses <strong>name-based contracts</strong>
+          (<code>Walls.ABOpen</code>, <code>RoomA.Laptop</code>).
+        </p>
+        <div class="callout warn">
+          <p>
+            <code>getBooleanSignalValue</code> defaults to <strong>false</strong>
+            when it has never heard a 1. Do not poll wall FB at startup with that
+            API — a default false will paint “closed” over a live open wall.
+            Subscribe, and wrap incoming native booleans
+            (<code>bridgeReceiveBooleanFromNative</code>) so the UI sees every
+            transition. Localhost without a processor will not show processor-owned
+            overlays (power confirm); the UI may run a local fallback timer.
+          </p>
+        </div>
+
+        <h3 id="ch5-contracts">Contracts versus numbered joins</h3>
+        <p>
+          Numbered joins are “digital 21 on this XPanel.” Contracts are a named
+          dictionary both sides share. Three files are generated together
+          (<code>Divisible-Room/scripts/generate-contract.mjs</code>):
+        </p>
+        <table>
+          <thead><tr><th>File</th><th>Used by</th></tr></thead>
+          <tbody>
+            <tr><td><code>contracts/divisible-room.cse2j</code></td><td>CH5 archive (<code>ch5-cli archive -c</code>) and WebXPanel mapping</td></tr>
+            <tr><td><code>public/config/contract.cse2j</code></td><td>Runtime copy at the path CrComLib expects</td></tr>
+            <tr><td><code>contracts/divisible-room.chd</code></td><td>SIMPL Windows: Project → Manage GUI Extenders → Commit</td></tr>
+          </tbody>
+        </table>
+        <p>
+          CHD <strong>Input</strong> = program → panel (states). CHD
+          <strong>Output</strong> = panel → program (events). After commit, set
+          Control Join Ids: <strong>1 Walls, 2 Identity, 3 PowerConfirm, 4 RoomA,
+          5 RoomB, 6 RoomC</strong>. Do not also wire numbered joins for the same
+          signals.
+        </p>
+        <p>
+          Changing the contract (new enable pins, renamed signals) requires:
+          regenerate → rebuild <code>.ch5z</code> → <strong>re-commit the CHD
+          in SIMPL Windows</strong> → compile and reload the processor program
+          → deploy the new UI. Forgetting the CHD re-commit is the usual reason
+          a new signal exists in CH5 but never shows up in Debugger.
+        </p>
+
+        <h3 id="ch5-compile">How the UI gets compiled and loaded</h3>
+        <pre><code>cd Divisible-Room
+npm install
+npm run generate:contract
+npm run dev                 # http://localhost:5174  ?ipId=E1  ?ipId=C1  ?master=1
+
+npm run build:ch5z          # tsc + vite build + ch5-cli archive
+npm run deploy:xpanel       # processor as Web XPanel
+PANEL_HOST=&lt;panel-ip&gt; npm run deploy:panel</code></pre>
+        <p>
+          Archive command used here:
+          <code>ch5-cli archive -p divisible-room -d dist -o archive -c contracts/divisible-room.cse2j</code>.
+          Output is <code>archive/divisible-room.ch5z</code>, not <code>dist/</code>.
+          Quote paths that contain spaces (<code>Work Files</code>).
+        </p>
+        <p>
+          Processor-hosted URL shape (token created on the processor; never commit it):
+        </p>
+        <pre><code>https://192.168.86.200/divisible-room/index.html?ipID=E1&amp;authToken=&lt;token&gt;
+https://192.168.86.200/divisible-room/index.html?ipID=C1&amp;authToken=&lt;token&gt;</code></pre>
+        <p>
+          <code>ch5-cli deploy</code> uses <code>-t web</code> for processor XPanel
+          and <code>-t touchscreen --slow-mode</code> for a TST-1080. Credentials
+          from <code>CH5CLI_DEPLOY_USER</code> / <code>CH5CLI_DEPLOY_PW</code>, or a
+          prompt. Console may need <code>webserver allowsharedsession</code> for
+          workstation XPanel.
+        </p>
+        <p>
+          TST-1080 in this lab is <strong>1920×1200</strong>. Also check 1280×800
+          emulation. Keep volume on the right rail at both sizes for one-zone
+          (satellite) layouts.
+        </p>
+
+        <h2 id="together">How a programmer actually uses this</h2>
+        <ol>
+          <li><strong>Decide the signals.</strong> Button presses, feedback, analogs. Write them down as names, not join numbers, if you can use a contract.</li>
+          <li><strong>Write or extend SIMPL+.</strong> Add pins in the correct group with matching <code>_SKIP_</code> on the other column so existing rows do not shift. CRLF. <code>SPlusCC \rebuild</code>.</li>
+          <li><strong>Reach for Simpl# only when the module would otherwise grow a protocol stack.</strong> Rebuild the <code>.clz</code>, then every dependent <code>.usp</code>.</li>
+          <li><strong>Wire the sheet.</strong> Fan global FB. One Identity and one Power Confirm per XPanel. Drive enable lines from SIMPL, not from the UI guessing interlocks.</li>
+          <li><strong>Generate the contract</strong> so CH5 names and CHD pins match. Commit the CHD on each XPanel.</li>
+          <li><strong>Build the UI against those names.</strong> Optimistic local state is fine for a press; never let a default-false read stomp real FB.</li>
+          <li><strong>Ship two artifacts:</strong> <code>.lpz</code> to the processor, <code>.ch5z</code> to the processor (web) and/or TST-1080.</li>
+          <li><strong>Prove it in Debugger</strong> on the processor, then on the glass. A signal that moves in Debugger but not on the UI is a contract/name/subscribe bug. A UI press that never hits Debugger is publish/IP-ID/wiring.</li>
+        </ol>
+        <div class="callout ok">
+          <p>
+            Interlocks that are about the building (do not orphan rooms, do not
+            close wall AB while BC is still combined) belong in SIMPL, exposed as
+            enable inputs. The HTML5 panel should show or disable buttons from
+            those enables, not invent a second copy of the rule.
+          </p>
+        </div>
+
+        <h2 id="lab">This lab — facts another session must not reinvent</h2>
+        <table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Processor</td><td>4-Series RMC4 at <code>192.168.86.200</code></td></tr>
+            <tr><td>Touch panel</td><td>TST-1080, 1920×1200, IP-ID <code>C1</code> is the master UI in Divisible-Room</td></tr>
+            <tr><td>Room XPanels</td><td>A = <code>E1</code>, B = <code>E2</code>, C = <code>E3</code></td></tr>
+            <tr><td>Wall sensors</td><td>High = wall present = rooms <em>divided</em>. Open FB high = combined.</td></tr>
+            <tr><td>Legal layouts</td><td>A|B|C, A+B|C, A|B+C, A+B+C. A cannot join C unless B is in the same space.</td></tr>
+            <tr><td>Global wall truth</td><td>Logic <code>Wall_AB_Open_FB</code> / <code>Wall_BC_Open_FB</code>, fanned to every XPanel <code>ABOpen</code> / <code>BCOpen</code></td></tr>
+            <tr><td>Toggles</td><td><code>Wall_AB_Toggle</code> / <code>Wall_BC_Toggle</code> invert those FBs. Last sensor or last override wins.</td></tr>
+            <tr><td>Master-only UI</td><td>Combine all / Divide all. Shown when IP-ID is C1 or <code>Master_Mode</code> is high.</td></tr>
+            <tr><td>Enable</td><td>CHD <code>ABEnable</code> / <code>BCEnable</code>. High = Combine/Divide allowed. Unwired = low = disabled. SIMPL owns the rule.</td></tr>
+            <tr><td>Identity</td><td>One parameterized module per panel. <code>Panel_Role</code> 0 master / 1–3 A–C. Analog 0 is not “master” by itself — digital <code>Master_Mode_FB</code> is.</td></tr>
+            <tr><td>Power confirm</td><td>One Power Shutdown Confirmation v1.0 per XPanel, not fanned. Localhost without that module uses a local 10s countdown.</td></tr>
+            <tr><td>Same <code>.ch5z</code></td><td>Every panel loads the same archive; identity comes from IP-ID + Identity module.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Logic digital input order (canonical): Sense AB/BC, skip, Combine_All,
+          Divide_All, AB_Toggle, BC_Toggle, skip, A/B/C AV, skip, volume ±.
+          Do not restack.
+        </p>
+        <p>
+          Git: track source, lockfiles, lab <code>.smw</code> / <code>.lpz</code>
+          under each project’s <code>simpl/</code>. Ignore <code>node_modules/</code>,
+          <code>dist/</code>, <code>archive/</code> (<code>.ch5z</code> is local),
+          <code>SPlsWork/</code>, autosaves. Never commit JWTs or deploy passwords.
+        </p>
+
+        <h2 id="ai">Start here — instructions for another AI</h2>
+        <div class="callout danger">
+          <p>
+            Read this page, then <code>Divisible-Room/docs/CONTRACT-MAP.md</code>,
+            <code>Divisible-Room/docs/simpl.md</code>, and
+            <code>~/.grok/skills/crestron-simpl/references/crestron-programming-nuances.md</code>
+            before editing <code>.usp</code> / <code>.cs</code>.
+          </p>
+        </div>
+        <ol>
+          <li>Identify the layer: sheet wiring (<code>.smw</code>), SIMPL+ (<code>.usp</code>), Simpl# (<code>.cs</code>), or CH5 (<code>src/</code>).</li>
+          <li>After any <code>.cs</code> or <code>.usp</code> edit, normalize <strong>CRLF</strong> before compile.</li>
+          <li>Before any SIMPL+ I/O edit, draw the Input | Parameter | Output grid. Add matching skips. Do not restack existing pins unless the user asked.</li>
+          <li>Compile Simpl# <code>.clz</code> first, then each dependent <code>.usp</code> with <code>SPlusCC.exe</code>. Zero SIMPL+ errors is not done until <code>SPlsWork</code> glue exists.</li>
+          <li>Never modify <code>_archive</code> unless asked.</li>
+          <li>CH5: named contracts for Divisible-Room; numbered joins only for Hello-World. Quote paths with spaces. Archive to <code>archive/</code>.</li>
+          <li>If volume lives in the right rail, listen on <code>.workspace</code> (or a parent that contains the rail), not only <code>#zones</code>. Put <code>data-room</code> on the moved volume card.</li>
+          <li>Do not poll digital FB with a default-false reader. Subscribe and handle incoming native booleans.</li>
+          <li>Do not put secrets in git. Deploy via env vars.</li>
+          <li>When UI and Debugger disagree, state which direction failed (press never left the panel, or FB never arrived) before changing both sides.</li>
+        </ol>
+        <table>
+          <thead><tr><th>Error</th><th>Usual cause</th></tr></thead>
+          <tbody>
+            <tr><td>1100 statement outside function</td><td><code>#DEFAULT_ARG</code>, or <code>//</code> inside Function/CHANGE/PUSH, or a broken callback above</td></tr>
+            <tr><td>1700 EOF at line 1</td><td><code>.usp</code> is LF-only</td></tr>
+            <tr><td>1616 callback signature</td><td>C# delegate vs <code>CALLBACK FUNCTION</code> types; 2nd RegisterDelegate arg is property name</td></tr>
+            <tr><td>1003 invalid type</td><td><code>USHORT</code> — use <code>INTEGER</code></td></tr>
+            <tr><td>1400 illegal assignment</td><td>SimplSharpString assigned to STRING_OUTPUT — use a native buffer</td></tr>
+            <tr><td>No constructors defined</td><td>Simpl# ctor is not public</td></tr>
+            <tr><td>Invalid SIMPL# assembly</td><td>NuGet SDK CLZ built with <code>series3</code></td></tr>
+            <tr><td>Wall UI stuck closed</td><td>Default-false poll, or Open_FB not fanned, or CHD names not committed</td></tr>
+            <tr><td>Volume dead on satellites</td><td>Card moved to <code>#rail-vol</code>; listeners still on <code>#zones</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="glossary">Glossary</h2>
+        <table>
+          <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>CIP</td><td>Crestron Internet Protocol — how panels talk to the processor</td></tr>
+            <tr><td>IP-ID</td><td>Hex address of a panel on that processor (<code>E1</code>, <code>C1</code>)</td></tr>
+            <tr><td>FB</td><td>Feedback — the program telling the panel the true state</td></tr>
+            <tr><td>Join</td><td>A numbered signal slot on a panel</td></tr>
+            <tr><td>Contract / CHD / cse2j</td><td>Named-signal bundle shared by CH5 and SIMPL Windows</td></tr>
+            <tr><td>XPanel</td><td>A software panel (browser or processor-hosted) that acts like a touchpanel</td></tr>
+            <tr><td>Construct</td><td>Crestron’s visual CH5 IDE. Not used in this catalog</td></tr>
+            <tr><td><code>.usp</code> / <code>.ush</code></td><td>SIMPL+ source / compiled symbol definition</td></tr>
+            <tr><td><code>.clz</code></td><td>Packaged Simpl# library</td></tr>
+            <tr><td><code>.smw</code> / <code>.lpz</code></td><td>SIMPL Windows program / compiled processor load</td></tr>
+            <tr><td><code>.ch5z</code></td><td>Zipped CH5 web app</td></tr>
+            <tr><td>SPlusCC</td><td>Command-line SIMPL+ compiler</td></tr>
+            <tr><td>CrComLib</td><td>JavaScript control library inside every CH5 app</td></tr>
+            <tr><td>WebXPanel</td><td>Browser CIP client, so Chrome can debug against a live processor</td></tr>
+          </tbody>
+        </table>
+
+        <footer>
+          <p>
+            Written from work on Hello-World and Divisible-Room in
+            <a href="https://github.com/Prophet6/Crestron-HTML5">Crestron-HTML5</a>,
+            plus SIMPL+ / Simpl# practice in
+            <a href="https://github.com/Prophet6/Crestron-Modules">Crestron-Modules</a>.
+            Open this file in a browser; it has no build step.
+          </p>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
