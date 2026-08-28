@@ -528,6 +528,7 @@ export function mountApp(runtime: CrestronRuntime): void {
     if (!proto) {
       throw new Error('Zone template is empty');
     }
+    must('#rail-vol').replaceChildren();
     zonesEl.replaceChildren();
     zonesEl.dataset.count = String(Math.max(1, zones.length));
     for (const zone of zones) {
@@ -535,6 +536,12 @@ export function mountApp(runtime: CrestronRuntime): void {
       node.dataset.room = commandRoom(zone);
       node.dataset.zone = zone.id;
       zonesEl.appendChild(node);
+    }
+    if (zones.length === 1) {
+      const volume = zonesEl.querySelector('.card--vol');
+      if (volume) {
+        must('#rail-vol').appendChild(volume);
+      }
     }
   }
 
@@ -554,12 +561,13 @@ export function mountApp(runtime: CrestronRuntime): void {
     card.querySelectorAll<HTMLElement>('[data-source]').forEach((btn) => {
       btn.classList.toggle('is-selected', Number(btn.dataset.source) === ui.source);
     });
-    const slider = within<HTMLInputElement>(card, '[data-vol]');
+    const volHost = card.querySelector('.card--vol') ?? must('#rail-vol');
+    const slider = within<HTMLInputElement>(volHost, '[data-vol]');
     if (document.activeElement !== slider) {
       slider.value = String(ui.volume);
     }
-    within(card, '[data-vol-label]').textContent = `${ui.volume}%`;
-    within(card, '[data-mute]').classList.toggle('is-selected', ui.mute);
+    within(volHost, '[data-vol-label]').textContent = `${ui.volume}%`;
+    within(volHost, '[data-mute]').classList.toggle('is-selected', ui.mute);
     within(card, '[data-power]').classList.toggle('is-selected', ui.source === Source.Off);
 
     const copy = SOURCE_COPY[ui.source];

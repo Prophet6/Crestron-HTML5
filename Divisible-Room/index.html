@@ -38,29 +38,7 @@
     <div id="app" class="shell">
       <header class="header">
         <div class="header__title">
-          <p class="eyebrow" id="panel-role">Master panel</p>
-          <div class="header__title-row">
-            <button
-              type="button"
-              class="btn header__state"
-              id="config-label"
-              data-action="open-partitions"
-              aria-expanded="false"
-              aria-controls="partition-page"
-            >
-              Three independent rooms
-            </button>
-            <div class="header__walls" aria-label="Wall state">
-              <span class="header-wall" data-header-wall="AB">
-                <span class="header-wall__name">A | B</span>
-                <span class="header-wall__state" data-header-wall-state="AB">Divided</span>
-              </span>
-              <span class="header-wall" data-header-wall="BC">
-                <span class="header-wall__name">B | C</span>
-                <span class="header-wall__state" data-header-wall-state="BC">Divided</span>
-              </span>
-            </div>
-          </div>
+          <h1 class="header__panel-name" id="panel-role">Room A panel</h1>
         </div>
         <div class="header__clock">
           <p id="clock-time">--:--</p>
@@ -73,7 +51,32 @@
         </div>
       </header>
 
-      <section class="zones" id="zones" aria-label="Zones" data-count="1"></section>
+      <div class="workspace">
+        <section class="zones" id="zones" aria-label="Zones" data-count="1"></section>
+        <aside class="rail card" id="rail">
+          <button
+            type="button"
+            class="btn rail__partition"
+            id="config-label"
+            data-action="open-partitions"
+            aria-expanded="false"
+            aria-controls="partition-page"
+          >
+            Three independent rooms
+          </button>
+          <div class="rail__walls" aria-label="Wall state">
+            <span class="header-wall" data-header-wall="AB">
+              <span class="header-wall__name">A | B</span>
+              <span class="header-wall__state" data-header-wall-state="AB">Closed</span>
+            </span>
+            <span class="header-wall" data-header-wall="BC">
+              <span class="header-wall__name">B | C</span>
+              <span class="header-wall__state" data-header-wall-state="BC">Closed</span>
+            </span>
+          </div>
+          <div class="rail__vol" id="rail-vol"></div>
+        </aside>
+      </div>
 
       <div id="power-confirm" class="overlay" hidden>
         <div class="overlay__card">
@@ -144,7 +147,6 @@
             </div>
           </section>
           <section class="card card--vol">
-            <p class="eyebrow">Volume</p>
             <div class="vol-stack">
               <p class="vol-readout"><strong data-vol-label>0%</strong></p>
               <label class="slider-block">

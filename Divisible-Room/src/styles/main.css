@@ -65,40 +65,81 @@ input {
   padding: 12px 20px 12px 24px;
 }
 
-.header__state {
+.header__panel-name {
   margin: 0;
   min-width: 0;
-  min-height: 56px;
-  padding: 8px 18px;
-  font-size: 28px;
+  font-size: 44px;
   font-weight: 600;
-  line-height: 1.15;
-  text-align: left;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
-.header__state.is-selected {
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 12px;
+  min-height: 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.rail__partition {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+
+.rail__partition.is-selected {
   border-color: var(--accent);
   background: rgba(61, 156, 240, 0.2);
 }
 
-.header__title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
+.rail__walls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.header__walls {
+.rail__vol {
   display: flex;
-  gap: 8px;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rail__vol:empty {
+  display: none;
+}
+
+.rail .card--vol {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.rail .vol-stack {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .header-wall {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 92px;
-  padding: 6px 12px;
+  min-width: 0;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: repeating-linear-gradient(
@@ -123,13 +164,13 @@ input {
 }
 
 .header-wall__name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .header-wall__state {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .header__clock {
@@ -246,14 +287,14 @@ input {
 
 .zone__cards {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   flex: 1;
   min-height: 0;
 }
 
+.zones[data-count='2'] .zone__cards,
 .zones[data-count='3'] .zone__cards {
-  grid-template-columns: 1fr;
   grid-template-rows: minmax(0, 1fr) auto;
 }
 
@@ -588,14 +629,14 @@ input[type='range'] {
 }
 
 @media (max-width: 1280px) {
-  .header__state,
+  .header__panel-name,
+  .header__clock p:first-child {
+    font-size: 36px;
+  }
+
   .zone__head h2,
   .source-page h3 {
     font-size: 22px;
-  }
-
-  .header__clock p:first-child {
-    font-size: 36px;
   }
 
   .vol-readout strong {
@@ -603,13 +644,16 @@ input[type='range'] {
   }
 
   .btn,
-  .wall__btn,
-  .header__state {
+  .wall__btn {
     min-height: 56px;
   }
 
-  /* Keep volume in the right column; 1280x800 must not stack it under sources. */
-  .zone__cards {
+  .workspace {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  }
+
+  .rail__partition {
+    font-size: 15px;
+    min-height: 56px;
   }
 }
