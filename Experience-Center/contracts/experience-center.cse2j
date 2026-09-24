@@ -1,0 +1,229 @@
+{
+	"name": "ExperienceCenter",
+	"timestamp": "2026-09-24 22:46:27.627",
+	"version": "1.0.0.0",
+	"schema_version": 1,
+	"extra_value": "Experience Center name-based CH5 contract",
+	"signals": {
+		"states": {
+			"boolean": {
+				"1": {
+					"1": "Mode.SystemOn",
+					"2": "Mode.Startup",
+					"3": "Mode.Shutdown",
+					"4": "Mode.Neutral",
+					"5": "Mode.Gallery",
+					"6": "Mode.Screening",
+					"7": "Mode.Presentation"
+				},
+				"2": {
+					"1": "PowerConfirm.WarningPage",
+					"2": "PowerConfirm.Shutdown"
+				},
+				"4": {
+					"1": "Sound.Mute1",
+					"2": "Sound.Visible1",
+					"3": "Sound.Enable1",
+					"4": "Sound.Mute2",
+					"5": "Sound.Visible2",
+					"6": "Sound.Enable2",
+					"7": "Sound.Mute3",
+					"8": "Sound.Visible3",
+					"9": "Sound.Enable3",
+					"10": "Sound.Mute4",
+					"11": "Sound.Visible4",
+					"12": "Sound.Enable4",
+					"13": "Sound.Mute5",
+					"14": "Sound.Visible5",
+					"15": "Sound.Enable5",
+					"16": "Sound.Mute6",
+					"17": "Sound.Visible6",
+					"18": "Sound.Enable6"
+				}
+			},
+			"numeric": {
+				"3": {
+					"1": "Lighting.Active",
+					"2": "Lighting.Level"
+				},
+				"4": {
+					"1": "Sound.Level1",
+					"2": "Sound.Level2",
+					"3": "Sound.Level3",
+					"4": "Sound.Level4",
+					"5": "Sound.Level5",
+					"6": "Sound.Level6"
+				}
+			},
+			"string": {
+				"1": {
+					"1": "Mode.RoomName",
+					"2": "Mode.Status",
+					"3": "Mode.MarkFile"
+				},
+				"2": {
+					"1": "PowerConfirm.CountText"
+				},
+				"3": {
+					"1": "Lighting.Preset1Name",
+					"2": "Lighting.Preset2Name",
+					"3": "Lighting.Preset3Name",
+					"4": "Lighting.Preset4Name",
+					"5": "Lighting.Preset5Name",
+					"6": "Lighting.Preset6Name"
+				},
+				"4": {
+					"1": "Sound.Name1",
+					"2": "Sound.Name2",
+					"3": "Sound.Name3",
+					"4": "Sound.Name4",
+					"5": "Sound.Name5",
+					"6": "Sound.Name6"
+				}
+			}
+		},
+		"events": {
+			"boolean": {
+				"Mode.Startup": {
+					"joinId": 1,
+					"smartObjectId": 1
+				},
+				"Mode.Shutdown": {
+					"joinId": 2,
+					"smartObjectId": 1
+				},
+				"Mode.Neutral": {
+					"joinId": 3,
+					"smartObjectId": 1
+				},
+				"Mode.Gallery": {
+					"joinId": 4,
+					"smartObjectId": 1
+				},
+				"Mode.Screening": {
+					"joinId": 5,
+					"smartObjectId": 1
+				},
+				"Mode.Presentation": {
+					"joinId": 6,
+					"smartObjectId": 1
+				},
+				"PowerConfirm.Initiate": {
+					"joinId": 1,
+					"smartObjectId": 2
+				},
+				"PowerConfirm.Cancel": {
+					"joinId": 2,
+					"smartObjectId": 2
+				},
+				"PowerConfirm.Confirm": {
+					"joinId": 3,
+					"smartObjectId": 2
+				},
+				"Lighting.Preset1Recall": {
+					"joinId": 1,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset1Save": {
+					"joinId": 2,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset2Recall": {
+					"joinId": 3,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset2Save": {
+					"joinId": 4,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset3Recall": {
+					"joinId": 5,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset3Save": {
+					"joinId": 6,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset4Recall": {
+					"joinId": 7,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset4Save": {
+					"joinId": 8,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset5Recall": {
+					"joinId": 9,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset5Save": {
+					"joinId": 10,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset6Recall": {
+					"joinId": 11,
+					"smartObjectId": 3
+				},
+				"Lighting.Preset6Save": {
+					"joinId": 12,
+					"smartObjectId": 3
+				},
+				"Sound.Mute1": {
+					"joinId": 1,
+					"smartObjectId": 4
+				},
+				"Sound.Mute2": {
+					"joinId": 2,
+					"smartObjectId": 4
+				},
+				"Sound.Mute3": {
+					"joinId": 3,
+					"smartObjectId": 4
+				},
+				"Sound.Mute4": {
+					"joinId": 4,
+					"smartObjectId": 4
+				},
+				"Sound.Mute5": {
+					"joinId": 5,
+					"smartObjectId": 4
+				},
+				"Sound.Mute6": {
+					"joinId": 6,
+					"smartObjectId": 4
+				}
+			},
+			"numeric": {
+				"Lighting.Level": {
+					"joinId": 1,
+					"smartObjectId": 3
+				},
+				"Sound.Level1": {
+					"joinId": 1,
+					"smartObjectId": 4
+				},
+				"Sound.Level2": {
+					"joinId": 2,
+					"smartObjectId": 4
+				},
+				"Sound.Level3": {
+					"joinId": 3,
+					"smartObjectId": 4
+				},
+				"Sound.Level4": {
+					"joinId": 4,
+					"smartObjectId": 4
+				},
+				"Sound.Level5": {
+					"joinId": 5,
+					"smartObjectId": 4
+				},
+				"Sound.Level6": {
+					"joinId": 6,
+					"smartObjectId": 4
+				}
+			},
+			"string": {}
+		}
+	}
+}

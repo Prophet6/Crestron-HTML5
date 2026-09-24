@@ -12,6 +12,7 @@ This project is not affiliated with Crestron Electronics.
 |--------|------------|----------|
 | [Hello-World](Hello-World/) | First custom CH5 panel: vanilla TypeScript, Vite, CrComLib. Sources, volume, lights, power. Proven on Vite, TST-1080, and processor-hosted Web XPanel. | RMC4, TST-1080 (IP-ID C1), HTML5 XPanel (IP-ID E1) |
 | [Divisible-Room](Divisible-Room/) | Three combinable rooms (A–B–C). Name-based CH5 contracts (`.cse2j` + `.chd`), Identity S+ per panel, IP-ID E1–E3. | RMC4, XPanel E1/E2/E3 |
+| [Experience-Center](Experience-Center/) | Staff interface for the Experience Center. Modes, lighting presets, sound strips. Name-based contract. | TSW-1070-B-S and HTML5 XPanel, both IP-ID C1 |
 
 Docs and SIMPL pairing for each project live inside that folder.
 

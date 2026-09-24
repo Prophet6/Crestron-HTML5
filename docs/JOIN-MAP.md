@@ -214,3 +214,11 @@ Lab hardware: RMC4, TST-1080 **C1**, HTML5 XPanel **E1** (conflicts with Divisib
 | 32 | Digital | Both | `lightsDim` | `Lights_Dim` |
 | 33 | Digital | Both | `lightsOff` | `Lights_Off` |
 | 40 | Digital | Panel → program | `powerOff` | `Press_Off` |
+
+---
+
+## Experience Center
+
+Name-based contract, not numbered joins. Map: [`Experience-Center/docs/CONTRACT-MAP.md`](../Experience-Center/docs/CONTRACT-MAP.md). CHD: [`Experience-Center/contracts/experience-center.chd`](../Experience-Center/contracts/experience-center.chd).
+
+One symbol at IP-ID **C1** (TSW-1070-B-S and the browser XPanel). Control Join Ids **1 Mode, 2 PowerConfirm, 3 Lighting, 4 Sound**.

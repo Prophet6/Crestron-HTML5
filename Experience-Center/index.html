@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Experience Center</title>
+    <script src="./cr-com-lib.js"></script>
+    <script>
+      (function () {
+        var api = window.CrComLib;
+        if (!api || !api.bridgeReceiveBooleanFromNative) {
+          return;
+        }
+        var orig = api.bridgeReceiveBooleanFromNative.bind(api);
+        window.__ch5DigitalLog = [];
+        function wrap(name, value) {
+          orig(name, value);
+          var rec = { name: String(name), value: !!value };
+          window.__ch5DigitalLog.push(rec);
+          if (window.__ch5DigitalLog.length > 40) {
+            window.__ch5DigitalLog.shift();
+          }
+          if (typeof window.__ch5OnDigital === 'function') {
+            window.__ch5OnDigital(rec.name, rec.value);
+          }
+        }
+        api.bridgeReceiveBooleanFromNative = wrap;
+        window.bridgeReceiveBooleanFromNative = wrap;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app" class="shell" data-system="on" data-page="system">
+      <header class="header">
+        <div class="header__title">
+          <h1 class="header__room" id="room-name">Room Name Here</h1>
+          <p class="header__status-line" id="status-line">Waiting for a system status update</p>
+        </div>
+        <div class="header__clock">
+          <p id="clock-time">--:--</p>
+          <p id="clock-date">—</p>
+        </div>
+        <div class="header__status">
+          <span id="cip-dot" class="status-dot" data-state="connecting" aria-hidden="true"></span>
+          <p id="cip-label">Connecting</p>
+        </div>
+      </header>
+
+      <main class="stage">
+        <section id="page-system" class="page" data-page-panel="system">
+          <div id="system-off" class="off" hidden>
+            <span class="off__spot" aria-hidden="true"></span>
+            <div class="off__mark">
+              <button type="button" id="startup" class="off__hit" aria-label="Touch the logo to start the system">
+                <svg id="mark-fallback" class="off__logo" viewBox="0 0 720 180" role="img" aria-hidden="true">
+                  <text
+                    x="360"
+                    y="132"
+                    text-anchor="middle"
+                    font-family="Palatino Linotype, Palatino, Times New Roman, serif"
+                    font-size="140"
+                    letter-spacing="10"
+                    fill="#f4f7fb"
+                  >
+                    MARK
+                  </text>
+                </svg>
+                <img id="owner-mark" class="off__logo" alt="" hidden />
+              </button>
+            </div>
+            <p class="off__hint">Touch the <em>logo</em> to start the system</p>
+          </div>
+          <div id="system-on" class="system-on">
+            <div class="mode-grid" role="group" aria-label="Modes">
+              <button type="button" class="btn mode-btn" data-mode="Neutral" aria-pressed="false">Neutral</button>
+              <button type="button" class="btn mode-btn" data-mode="Gallery" aria-pressed="false">Gallery</button>
+              <button type="button" class="btn mode-btn" data-mode="Screening" aria-pressed="false">Screening</button>
+              <button type="button" class="btn mode-btn" data-mode="Presentation" aria-pressed="false">Presentation</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-confirm" class="page confirm-page" data-page-panel="confirm" hidden>
+          <div class="confirm-page__card">
+            <h2 id="confirm-title">Are you sure?</h2>
+            <p class="confirm__count" id="count-text"></p>
+            <div class="confirm__actions">
+              <button type="button" class="btn btn--danger" id="confirm-yes">Confirm</button>
+              <button type="button" class="btn" id="confirm-no">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-lighting" class="page" data-page-panel="lighting" hidden>
+          <div class="light-layout">
+            <div class="preset-grid" id="presets" role="group" aria-label="Lighting presets"></div>
+            <label class="fader-block">
+              <span class="fader-block__name">Level</span>
+              <input id="light-level" type="range" min="0" max="100" value="0" aria-label="Lighting level" />
+              <span class="fader-block__value" id="light-level-value">0%</span>
+            </label>
+          </div>
+        </section>
+
+        <section id="page-sound" class="page" data-page-panel="sound" hidden>
+          <div id="sound-strips" class="sound-strips" aria-label="Sound levels"></div>
+          <p id="sound-empty" class="empty" hidden>No levels</p>
+        </section>
+      </main>
+
+      <nav class="nav" aria-label="Pages">
+        <button type="button" class="nav__btn is-current" data-nav="system">System</button>
+        <button type="button" class="nav__btn" data-nav="lighting">Lighting</button>
+        <button type="button" class="nav__btn" data-nav="sound">Sound</button>
+        <button type="button" class="nav__btn nav__power" id="shutdown" data-nav="shutdown" aria-label="Shutdown">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              d="M12 3v8M7.05 6.05a7 7 0 1 0 9.9 0"
+            />
+          </svg>
+        </button>
+      </nav>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
