@@ -2,6 +2,8 @@
 
 Staff touchpanel for the Experience Center. Crestron is the mode authority. This UI sets the mode and trims lighting and sound. The Docent iPad selects video. ISAAC owns scheduled playback.
 
+![Experience Center on a TSW at 1920x1200](docs/screenshot-tsw-1920x1200.png)
+
 Same stack as [Divisible-Room](../Divisible-Room/): vanilla TypeScript, Vite, CrComLib, name-based CH5 contract.
 
 | | |
