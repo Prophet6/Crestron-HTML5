@@ -1,6 +1,6 @@
 {
 	"name": "ExperienceCenter",
-	"timestamp": "2026-09-24 22:46:27.627",
+	"timestamp": "2026-09-26 03:31:05.772",
 	"version": "1.0.0.0",
 	"schema_version": 1,
 	"extra_value": "Experience Center name-based CH5 contract",
@@ -9,8 +9,8 @@
 			"boolean": {
 				"1": {
 					"1": "Mode.SystemOn",
-					"2": "Mode.Startup",
-					"3": "Mode.Shutdown",
+					"2": "Mode.Shutdown",
+					"3": "Mode.Startup",
 					"4": "Mode.Neutral",
 					"5": "Mode.Gallery",
 					"6": "Mode.Screening",
@@ -19,6 +19,14 @@
 				"2": {
 					"1": "PowerConfirm.WarningPage",
 					"2": "PowerConfirm.Shutdown"
+				},
+				"3": {
+					"1": "Lighting.Preset1",
+					"2": "Lighting.Preset2",
+					"3": "Lighting.Preset3",
+					"4": "Lighting.Preset4",
+					"5": "Lighting.Preset5",
+					"6": "Lighting.Preset6"
 				},
 				"4": {
 					"1": "Sound.Mute1",
@@ -43,8 +51,7 @@
 			},
 			"numeric": {
 				"3": {
-					"1": "Lighting.Active",
-					"2": "Lighting.Level"
+					"1": "Lighting.Level"
 				},
 				"4": {
 					"1": "Sound.Level1",
@@ -84,11 +91,11 @@
 		},
 		"events": {
 			"boolean": {
-				"Mode.Startup": {
+				"Mode.Shutdown": {
 					"joinId": 1,
 					"smartObjectId": 1
 				},
-				"Mode.Shutdown": {
+				"Mode.Startup": {
 					"joinId": 2,
 					"smartObjectId": 1
 				},

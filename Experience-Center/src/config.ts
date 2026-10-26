@@ -81,8 +81,8 @@ export const querySystemOn = (queryParam('system') ?? 'on').toLowerCase() !== 'o
 export const queryMode = queryParam('mode') ?? '';
 
 /**
- * `Mode.MarkFile` is a filename, optionally inside one folder: `mark1.png` or `Logo/mark2.jpg`.
- * The panel requests `https://<processor>/<that path>`.
+ * `Mode.MarkFile` is the path inside the processor HTML directory, for example `logos/brand.png`.
+ * That directory is the web root, so the panel requests `https://<processor>/logos/brand.png`.
  */
 export function markFileUrl(file: string): string | undefined {
   const cleaned = file.trim().replace(/^\/+/, '').replace(/\\/g, '/');

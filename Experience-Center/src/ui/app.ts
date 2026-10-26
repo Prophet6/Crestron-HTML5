@@ -6,6 +6,7 @@ import {
   percentToAnalog,
   pulse,
   publishAnalog,
+  publishDigital,
   readDigital,
   subscribeAnalog,
   subscribeDigital,
@@ -19,7 +20,8 @@ import {
   isModeName,
   MODE_NAMES,
   OPERATING_MODES,
-  PRESET_HOLD_MS,
+  PRESET_HOLD_DELAY_MS,
+  PRESET_HOLD_GAUGE_MS,
   SOUND_COUNT,
   type ModeName,
 } from '../modes';
@@ -60,8 +62,8 @@ export function mountApp(runtime: CrestronRuntime): void {
   let confirmFadeTimer = 0;
   let renderQueued = false;
   let lightLevel = 0;
-  let lightActive = 0;
   let lightDragging = false;
+  let pressingPreset = -1;
   let sawSoundVisible = false;
   let page: PageId = 'system';
   const modeHigh: Record<ModeName, boolean> = {
@@ -73,6 +75,7 @@ export function mountApp(runtime: CrestronRuntime): void {
     Presentation: false,
   };
   const presetNames = presetJoins.map(() => '');
+  const presetFb = presetJoins.map(() => false);
   const sound: SoundSlot[] = Array.from({ length: SOUND_COUNT }, () => ({
     level: 0,
     mute: false,
@@ -187,10 +190,6 @@ export function mountApp(runtime: CrestronRuntime): void {
     countText.textContent = value;
   });
 
-  subscribeAnalog(Joins.lighting.active, (value) => {
-    lightActive = value;
-    render();
-  });
   subscribeAnalog(Joins.lighting.level, (value) => {
     if (lightDragging) {
       return;
@@ -206,6 +205,10 @@ export function mountApp(runtime: CrestronRuntime): void {
     renderLight();
   });
   presetJoins.forEach((joins, index) => {
+    subscribeDigital(joins.feedback, (high) => {
+      presetFb[index] = high;
+      paintPreset(index);
+    });
     subscribeSerial(joins.name, (value) => {
       presetNames[index] = value;
       const label = presetRoot.querySelector<HTMLElement>(`[data-preset-label="${index + 1}"]`);
@@ -279,6 +282,12 @@ export function mountApp(runtime: CrestronRuntime): void {
     const mode = MODE_NAMES.find((item) => modeJoin[item].name === name);
     if (mode) {
       noteMode(mode, high);
+      return;
+    }
+    const preset = presetJoins.findIndex((joins) => joins.feedback.name === name);
+    if (preset >= 0) {
+      presetFb[preset] = high;
+      paintPreset(preset);
     }
   }
 
@@ -406,13 +415,23 @@ export function mountApp(runtime: CrestronRuntime): void {
       button.setAttribute('aria-disabled', blocked ? 'true' : 'false');
     });
 
-    presetRoot.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((button) => {
-      const slot = Number(button.dataset.preset);
-      button.classList.toggle('is-pressed', joinsLive && lightActive === slot);
+    presetJoins.forEach((_, index) => {
+      paintPreset(index);
     });
 
     renderLight();
     renderSound();
+  }
+
+  function paintPreset(index: number): void {
+    const button = presetRoot.querySelector<HTMLButtonElement>(`[data-preset="${index + 1}"]`);
+    if (!button) {
+      return;
+    }
+    const pressed = presetFb[index];
+    button.classList.toggle('is-pressed', pressed);
+    button.classList.toggle('is-holding', pressingPreset === index);
+    button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
   }
 
   function renderLight(): void {
@@ -510,8 +529,13 @@ export function mountApp(runtime: CrestronRuntime): void {
         return;
       }
       down = false;
+      if (pressingPreset === index) {
+        pressingPreset = -1;
+      }
       window.cancelAnimationFrame(frame);
       button.style.setProperty('--hold', '0');
+      publishDigital(presetJoins[index].save, false);
+      paintPreset(index);
       if (recall && !saved) {
         pulse(presetJoins[index].recall);
       }
@@ -528,21 +552,28 @@ export function mountApp(runtime: CrestronRuntime): void {
       event.preventDefault();
       down = true;
       saved = false;
+      pressingPreset = index;
+      paintPreset(index);
+      publishDigital(presetJoins[index].save, true);
       start = performance.now();
       button.setPointerCapture(event.pointerId);
       const tick = (now: number): void => {
         if (!down) {
           return;
         }
-        const progress = Math.min(1, (now - start) / PRESET_HOLD_MS);
-        button.style.setProperty('--hold', String(progress));
-        if (progress >= 1 && !saved) {
-          saved = true;
-          pulse(presetJoins[index].save);
-          button.classList.remove('is-saved');
-          void button.offsetWidth;
-          button.classList.add('is-saved');
-          return;
+        const elapsed = now - start;
+        if (elapsed < PRESET_HOLD_DELAY_MS) {
+          button.style.setProperty('--hold', '0');
+        } else {
+          const progress = Math.min(1, (elapsed - PRESET_HOLD_DELAY_MS) / PRESET_HOLD_GAUGE_MS);
+          button.style.setProperty('--hold', String(progress));
+          if (progress >= 1 && !saved) {
+            saved = true;
+            button.classList.remove('is-saved');
+            void button.offsetWidth;
+            button.classList.add('is-saved');
+            return;
+          }
         }
         frame = window.requestAnimationFrame(tick);
       };
@@ -610,24 +641,24 @@ export function mountApp(runtime: CrestronRuntime): void {
 
 function applyMark(file: string): void {
   const image = must<HTMLImageElement>('#owner-mark');
-  const fallback = must('#mark-fallback');
+  const hit = must('#startup');
   const url = markFileUrl(file);
   if (!url) {
     image.hidden = true;
     image.removeAttribute('src');
-    fallback.hidden = false;
+    hit.classList.remove('is-marked');
     return;
   }
+  hit.classList.add('is-marked');
   const remote = new Image();
   const stamped = `${url}?v=${Date.now()}`;
   remote.onload = () => {
     image.src = stamped;
     image.hidden = false;
-    fallback.hidden = true;
   };
   remote.onerror = () => {
     image.hidden = true;
-    fallback.hidden = false;
+    image.removeAttribute('src');
   };
   remote.src = stamped;
 }

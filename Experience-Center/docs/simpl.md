@@ -31,8 +31,8 @@ The extender is a SIMPL symbol grid. Blank rows are `[~UNUSED~]` (the same pad a
 ```
 Mode            SystemOn |
                 -------- | --------
-                Startup  | Startup
                 Shutdown | Shutdown
+                Startup  | Startup
                 Neutral  | Neutral
                 Gallery  | Gallery
                 Screening| Screening
@@ -50,10 +50,11 @@ PowerConfirm             | Initiate
                 Shutdown |
                 CountText |
 
-Lighting                 | PresetNRecall
-                         | PresetNSave
+Lighting presets are stored in `Crestron-Modules/lighting-preset-aram/Lighting Preset ARAM v1.0.usp`. See Modules.
+
+Lighting      PresetN | PresetNRecall
+                       | PresetNSave
                 -------- | --------   (repeated for presets 1–6)
-                Active   |
                 Level    | Level
                 -------- |
                 PresetNName
@@ -75,6 +76,7 @@ Sound           MuteN    | MuteN
 | Mode interlock | 1 | Hold exactly one of `Startup`, `Shutdown`, `Neutral`, `Gallery`, `Screening`, `Presentation` high into the Mode inputs. |
 | `Mode.SystemOn` | | High after startup has finished. Low when the system is off. The UI does not infer this from the mode digitals. |
 | ISAAC Serial Variable Control v1.1 | job program | `Unique_ID` `System_Mode`. The string is the mode name. Not a panel join. |
+| Lighting Preset ARAM v1.0 | 1 | `Lighting.PresetNRecall` → `PresetN_Recall`. `Lighting.PresetNSave` → `PresetN_Save` (held for the whole press, not a pulse). `PresetN_FB` → `Lighting.PresetN`. Live analogs to `Ain1`–`Ain16`. Recalled values come out `Aout1`–`Aout16`. A channel counts when `Ain` or `Aout` has a signal. `PresetN_FB` is high only when every one of those values equals the stored preset. Recall checks immediately. A later analog change clears feedback, then checks again after about 1 second. Several presets may match. Save stores at 2.5s and erases that preset to 0 at 10s. |
 
 `PowerConfirm.Shutdown` rising is the moment the UI pulses `Mode.Shutdown`. You can also tie `Shutdown_OS` straight into the shutdown sequence; the UI pulse is the panel’s mode request.
 
@@ -84,6 +86,6 @@ The job program already lives outside this repo, in the Experience Center contro
 
 ## Owner mark
 
-`Mode.MarkFile` is the filename only (`mark1.png` or `Logo/mark2.jpg`). The panel requests `https://<processor>/` plus that string. Put the file in the HTML directory at that relative path. `Mode.RoomName` and `Mode.Status` are the header lines.
+`Mode.MarkFile` is the only filename. It is the path inside the processor HTML directory. That directory is the web root, so a file in `HTML/logos` is the serial `logos/brand.png`, and the panel requests `https://<processor>/logos/brand.png`. `Mode.RoomName` and `Mode.Status` are the header lines.
 
 Signal names: [`CONTRACT-MAP.md`](CONTRACT-MAP.md).

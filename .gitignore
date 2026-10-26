@@ -39,3 +39,6 @@ Divisible-Room/*.smft
 Divisible-Room/*.lpz
 Divisible-Room/*.sig
 Divisible-Room/*.dip
+
+# Client brand marks stay local
+Experience-Center/marks/

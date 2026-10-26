@@ -21,7 +21,7 @@ Bottom nav: **System**, **Lighting**, **Sound**.
 
 - **System off:** the placeholder wordmark. Touching it starts the system. Sound in the nav is dimmed.
 - **System on:** Neutral, Gallery, Screening, and Presentation are the large selections. Startup is not shown. Shutdown is a smaller control and opens the verification layer only when the processor raises `PowerConfirm.WarningPage`.
-- **Lighting:** six presets. A short press recalls. A 2.5 second hold saves and the button blinks. One Level fader.
+- **Lighting:** six presets. A short press recalls. A 2.5 second hold saves and the button blinks. The save gauge appears after 1 second. One Level fader. Feedback for each preset is a digital input.
 - **Sound:** up to six faders, mute under each. A strip with Visible low is omitted. Enable low dims the strip and ignores it.
 
 Mode buttons light from digital feedback. A press does not light itself.
@@ -30,7 +30,7 @@ Offline preview: `/?system=off`, `/?system=on`, `/?mode=Screening`. `?debug=1` o
 
 ## Owner mark
 
-The off page shows a placeholder wordmark until `Mode.MarkFile` supplies a filename. The serial may include one folder (`mark1.png` or `Logo/mark2.jpg`). The panel requests `https://<processor>/` plus that path. That path is in the processor HTML directory. If the file is missing, the placeholder stays.
+The off page shows a placeholder until `Mode.MarkFile` supplies the path. That string is the only filename. A file in the processor HTML directory at `logos/brand.png` is requested as `https://<processor>/logos/brand.png`. If the file is missing, the placeholder stays.
 
 ## Contract
 

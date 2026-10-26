@@ -43,7 +43,6 @@ export const Joins = {
     countText: s('PowerConfirm.CountText'),
   },
   lighting: {
-    active: n('Lighting.Active'),
     level: n('Lighting.Level'),
     levelRamp: o('Lighting.Level'),
   },
@@ -59,6 +58,7 @@ export const modeJoin: Record<ModeName, DigitalJoin> = {
 };
 
 export interface PresetJoins {
+  feedback: DigitalJoin;
   name: SerialJoin;
   recall: DigitalJoin;
   save: DigitalJoin;
@@ -67,6 +67,7 @@ export interface PresetJoins {
 export const presetJoins: PresetJoins[] = Array.from({ length: PRESET_COUNT }, (_, index) => {
   const slot = index + 1;
   return {
+    feedback: b(`Lighting.Preset${slot}`),
     name: s(`Lighting.Preset${slot}Name`),
     recall: b(`Lighting.Preset${slot}Recall`),
     save: b(`Lighting.Preset${slot}Save`),

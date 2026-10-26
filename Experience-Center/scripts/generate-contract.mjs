@@ -20,7 +20,7 @@ const contractId = 'experience-center-contracts-v1';
 /** Empty cell. Written as `[~UNUSED~]` in the CHD — the same blank SIMPL+ `_SKIP_` becomes. */
 const SKIP = null;
 
-const modeNames = ['Startup', 'Shutdown', 'Neutral', 'Gallery', 'Screening', 'Presentation'];
+const modeNames = ['Shutdown', 'Startup', 'Neutral', 'Gallery', 'Screening', 'Presentation'];
 const presetCount = 6;
 const soundCount = 6;
 
@@ -72,9 +72,9 @@ const components = [
   {
     instance: 'Lighting',
     smartObjectId: 3,
-    hint: 'Preset recall, save, blank row. Then Active, Level, and names.',
+    hint: 'Preset feedback beside recall, save under it, blank row. Then Level and names.',
     digital: {
-      inputs: Array.from({ length: presetCount }, () => [SKIP, SKIP, SKIP]).flat(),
+      inputs: Array.from({ length: presetCount }, (_, i) => [`Preset${i + 1}`, SKIP, SKIP]).flat(),
       outputs: Array.from({ length: presetCount }, (_, i) => [
         `Preset${i + 1}Recall`,
         `Preset${i + 1}Save`,
@@ -82,8 +82,8 @@ const components = [
       ]).flat(),
     },
     analog: {
-      inputs: ['Active', 'Level', SKIP],
-      outputs: [SKIP, 'Level'],
+      inputs: ['Level', SKIP],
+      outputs: ['Level'],
     },
     serial: {
       inputs: Array.from({ length: presetCount }, (_, i) => `Preset${i + 1}Name`),

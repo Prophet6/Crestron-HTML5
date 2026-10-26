@@ -23,7 +23,7 @@ Digital feedback high draws that selection pressed. The same six names are also 
 | `Mode.Presentation` | digital both | Input + Output `Presentation` | |
 | `Mode.RoomName` | serial state | Serial in `RoomName` | Header title. Empty shows “Room Name Here”. |
 | `Mode.Status` | serial state | Serial in `Status` | Line under the room name, up to 64 characters. Empty shows “Waiting for a system status update”. |
-| `Mode.MarkFile` | serial state | Serial in `MarkFile` | Filename only, optional folder: `mark1.png` or `Logo/mark2.jpg`. Loaded from `https://<processor>/` plus that path. |
+| `Mode.MarkFile` | serial state | Serial in `MarkFile` | The only filename. Path inside the processor HTML directory. `logos/brand.png` is requested as `https://<processor>/logos/brand.png`. |
 
 Hold one mode digital high. That lights the matching System button. `Mode.Status` is the header line; it is not derived from the mode digitals.
 
@@ -46,11 +46,11 @@ No count analog. The opaque box displays `CountText` as sent. `WarningPage` high
 
 | CH5 name | Type | CHD | Notes |
 |----------|------|-----|-------|
-| `Lighting.Active` | analog state | Analog in `Active` | `0` none, `1`–`6` which preset is lit |
 | `Lighting.Level` | analog both | Analog in+out `Level` | `0–65535`. Object subscribe is the ramp on the same name. |
-| `Lighting.PresetNName` | serial state | Serial in `PresetNName` | N = 1–6. Empty shows “Preset N”. |
-| `Lighting.PresetNRecall` | digital event | Output `PresetNRecall` | Short press |
-| `Lighting.PresetNSave` | digital event | Output `PresetNSave` | Held 2.5 seconds. The blink is local. |
+| `Lighting.PresetN` | digital state | Input `PresetN` | From module `PresetN_FB`. High only when every defined analog matches preset N. More than one may be high. The press itself does not light the button. N = 1–6. |
+| `Lighting.PresetNName` | serial state | Serial in `PresetNName` | Empty shows “Preset N”. |
+| `Lighting.PresetNRecall` | digital event | Output `PresetNRecall` | Short press. Wire to module `PresetN_Recall`. |
+| `Lighting.PresetNSave` | digital level | Output `PresetNSave` | High from finger down to finger up. Wire to module `PresetN_Save`. The gauge appears after 1 second and fills over the next 1.5 seconds. The blink at 2.5 seconds is local. The module stores then, and erases that preset at 10 seconds. |
 
 Recall does not change the system mode.
 

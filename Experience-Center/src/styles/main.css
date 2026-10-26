@@ -221,6 +221,10 @@ button {
   transform: translateY(calc(-0.29 * clamp(32px, 3.2vw, 52px) - 7px));
 }
 
+#startup.is-marked #mark-fallback {
+  display: none !important;
+}
+
 .off__logo {
   position: relative;
   z-index: 1;
@@ -385,9 +389,17 @@ button {
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 6px;
+  z-index: 1;
+  height: 10px;
   width: calc(var(--hold, 0) * 100%);
-  background: var(--text);
+  background: var(--accent);
+  opacity: calc(min(1, var(--hold, 0) * 100));
+  pointer-events: none;
+}
+
+.preset__label {
+  position: relative;
+  z-index: 2;
 }
 
 .preset.is-saved {
