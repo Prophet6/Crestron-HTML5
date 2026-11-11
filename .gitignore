@@ -42,3 +42,6 @@ Divisible-Room/*.dip
 
 # Client brand marks stay local
 Experience-Center/marks/
+
+# Crestron Construct sample download stays local
+/crestron_construct_sample_custom_div_demo_v1.0.1.zip
